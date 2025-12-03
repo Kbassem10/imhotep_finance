@@ -17,6 +17,8 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
       external: [],
       output: {
@@ -27,6 +29,7 @@ export default defineConfig({
       },
     },
   },
+  base: './', // Use relative paths for Electron
   // Ensure service worker and manifest are copied correctly
   publicDir: 'public',
   define: {

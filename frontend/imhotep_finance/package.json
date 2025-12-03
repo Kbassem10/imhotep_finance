@@ -1,12 +1,25 @@
 {
   "name": "imhotep_finance",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Manage your finances efficiently with Imhotep Financial Manager",
+  "author": "Imhotep Tech",
   "type": "module",
+  "main": "electron/main.cjs",
+  "homepage": "./",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:icons": "bash scripts/generate-icons.sh",
+    "electron:dev": "NODE_ENV=development electron .",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:build:flatpak": "npm run build && electron-builder --linux flatpak",
+    "electron:build:appimage": "npm run build && electron-builder --linux AppImage",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:all": "npm run build && electron-builder --linux --win --mac"
   },
   "dependencies": {
     "@codemirror/basic-setup": "^0.20.0",
@@ -17,6 +30,7 @@
     "@tailwindcss/postcss": "^4.1.12",
     "axios": "^1.12.0",
     "chart.js": "^4.5.0",
+    "electron-updater": "^6.1.8",
     "react": "^19.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.0",
@@ -28,6 +42,8 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -35,5 +51,83 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "vite": "^7.1.12"
+  },
+  "build": {
+    "appId": "com.imhotep.finance",
+    "productName": "Imhotep Finance",
+    "icon": "public/imhotep_finance.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "flatpak",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Finance",
+      "icon": "build/icons/icon.png",
+      "desktop": {
+        "Name": "Imhotep Finance",
+        "Comment": "Manage your finances efficiently",
+        "Categories": "Finance;Office;"
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/imhotep_finance.png",
+      "publisherName": "Imhotep Tech"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "category": "public.app-category.finance",
+      "icon": "public/imhotep_finance.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Imhotep-Tech",
+      "repo": "imhotep_finance"
+    }
   }
 }
