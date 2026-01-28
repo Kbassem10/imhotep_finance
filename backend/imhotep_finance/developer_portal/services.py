@@ -1,8 +1,11 @@
 from oauth2_provider.models import Application
+from oauth2_provider.generators import generate_client_id, generate_client_secret
 from django.core.exceptions import ValidationError
 from accounts.models import User
 from typing import Tuple, Optional
 from django.conf import settings
+import secrets
+import string
 
 
 def create_oauth2_application(
@@ -13,21 +16,22 @@ def create_oauth2_application(
     authorization_grant_type: str = 'authorization-code',
     redirect_uris: str,
     skip_authorization: bool = False
-) -> Tuple[Optional[Application], str]:
+) -> Tuple[Optional[Application], str, Optional[str]]:
     """
     Create a new OAuth2 application for a user.
     
     Returns:
-        Tuple[Application, message]: The created application and success message, or (None, error_message)
+        Tuple[Application, message, plain_text_secret]: The created application, success message,
+        and the plain text client secret (before hashing). Returns (None, error_message, None) on failure.
     """
     if not user:
-        return None, "User must be authenticated"
+        return None, "User must be authenticated", None
     
     if not name or not name.strip():
-        return None, "Application name is required"
+        return None, "Application name is required", None
     
     if not redirect_uris or not redirect_uris.strip():
-        return None, "At least one redirect URI is required"
+        return None, "At least one redirect URI is required", None
     
     try:
         # Add Swagger redirect URI if not already included (for testing via Swagger UI)
@@ -55,22 +59,32 @@ def create_oauth2_application(
         
         redirect_uris_final = '\n'.join(redirect_uris_list)
         
-        # Create the OAuth2 application
+        # Generate client_id and client_secret BEFORE creating the application
+        # This ensures we have the plain text secret before django-oauth-toolkit hashes it
+        client_id = generate_client_id()
+        plain_text_secret = generate_client_secret()
+        
+        # Create the OAuth2 application with explicit client_id and client_secret
+        # Note: django-oauth-toolkit will hash the secret in the save() method
         application = Application.objects.create(
             name=name,
             user=user,
+            client_id=client_id,
+            client_secret=plain_text_secret,  # Will be hashed by django-oauth-toolkit
             client_type=client_type,
             authorization_grant_type=authorization_grant_type,
             redirect_uris=redirect_uris_final,
             skip_authorization=skip_authorization,
         )
         
-        return application, "Application created successfully"
+        # Return both the application AND the plain text secret
+        # The plain text secret is what external apps need to use
+        return application, "Application created successfully", plain_text_secret
     
     except ValidationError as e:
-        return None, f"Validation error: {str(e)}"
+        return None, f"Validation error: {str(e)}", None
     except Exception as e:
-        return None, f"Failed to create application: {str(e)}"
+        return None, f"Failed to create application: {str(e)}", None
 
 
 def get_user_applications(*, user: User):
@@ -168,29 +182,28 @@ def add_swagger_redirect_uri(*, user: User, application_id: int) -> Tuple[Option
         return None, f"Failed to add Swagger redirect URI: {str(e)}"
 
 
-def regenerate_client_secret(*, user: User, application_id: int) -> Tuple[Optional[Application], str]:
+def regenerate_client_secret(*, user: User, application_id: int) -> Tuple[Optional[Application], str, Optional[str]]:
     """
     Regenerate the client secret for an OAuth2 application.
     
     Returns:
-        Tuple[Application, message]: Updated application and message, or (None, error_message)
+        Tuple[Application, message, plain_text_secret]: Updated application, message, 
+        and the plain text secret. Returns (None, error_message, None) on failure.
     """
     application = get_application_by_id(user=user, application_id=application_id)
     
     if not application:
-        return None, "Application not found or you don't have permission to modify it"
+        return None, "Application not found or you don't have permission to modify it", None
     
     try:
-        # Regenerate client secret using Django's password generator
-        from django.contrib.auth.hashers import make_password
-        import secrets
-        import string
+        # Generate a new plain text secret using django-oauth-toolkit's generator
+        plain_text_secret = generate_client_secret()
         
-        # Generate a random secret (similar to how django-oauth-toolkit does it)
-        alphabet = string.ascii_letters + string.digits
-        new_secret = ''.join(secrets.choice(alphabet) for _ in range(40))
-        application.client_secret = new_secret
+        # Set the secret (django-oauth-toolkit will hash it on save)
+        application.client_secret = plain_text_secret
         application.save()
-        return application, "Client secret regenerated successfully"
+        
+        # Return the plain text secret, NOT application.client_secret (which is now hashed)
+        return application, "Client secret regenerated successfully", plain_text_secret
     except Exception as e:
-        return None, f"Failed to regenerate client secret: {str(e)}"
+        return None, f"Failed to regenerate client secret: {str(e)}", None

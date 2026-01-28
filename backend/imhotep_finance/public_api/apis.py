@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasScope
 from drf_spectacular.utils import extend_schema
 from django.core.exceptions import ValidationError
@@ -9,6 +10,7 @@ from transaction_management.services import create_transaction, delete_transacti
 from transaction_management.selectors import get_transactions_for_user
 from finance_management.utils.get_networth import get_networth
 from finance_management.utils.serializer import serialize_transaction
+from finance_management.utils.currencies import get_allowed_currencies
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .serializers import (
     ExternalTransactionCreateSerializer,
@@ -248,3 +250,44 @@ class ExternalTransactionListApi(APIView):
                 {'error': f'An error occurred while retrieving transactions'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AvailableCurrenciesApi(APIView):
+    """
+    Public API endpoint for getting the list of supported currencies.
+    No authentication required - this is public information.
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=['Public API'],
+        description="Get the list of all supported currencies. No authentication required.",
+        responses={
+            200: {
+                'description': 'List of supported currency codes',
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'currencies': ['USD', 'EUR', 'GBP', '...'],
+                            'count': 152,
+                            'base_currency': 'USD'
+                        }
+                    }
+                }
+            }
+        },
+        operation_id='get_available_currencies'
+    )
+    def get(self, request):
+        """
+        Return the list of all supported currencies.
+        This endpoint does not require authentication.
+        """
+        currencies = get_allowed_currencies()
+        
+        return Response({
+            'currencies': currencies,
+            'count': len(currencies),
+            'base_currency': 'USD',
+            'note': 'These are the currency codes that can be used when creating transactions.'
+        }, status=status.HTTP_200_OK)

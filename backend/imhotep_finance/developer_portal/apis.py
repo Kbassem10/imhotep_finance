@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from oauth2_provider.models import Application
 from .serializers import (
@@ -44,7 +44,7 @@ class CreateOAuth2ApplicationApi(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            application, message = create_oauth2_application(
+            application, message, plain_text_secret = create_oauth2_application(
                 user=request.user,
                 name=serializer.validated_data['name'],
                 client_type=serializer.validated_data.get('client_type', 'confidential'),
@@ -59,13 +59,14 @@ class CreateOAuth2ApplicationApi(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Return application with client_secret (shown only once)
-            # Note: redirect_uris includes Swagger redirect URI automatically for testing
+            # Return application with the PLAIN TEXT client_secret (shown only once)
+            # IMPORTANT: We return plain_text_secret, NOT application.client_secret
+            # because application.client_secret contains the hashed version after save()
             return Response({
                 'id': application.id,
                 'name': application.name,
                 'client_id': application.client_id,
-                'client_secret': application.client_secret,  # Only shown on creation
+                'client_secret': plain_text_secret,  # Plain text secret, NOT the hashed one!
                 'client_type': application.client_type,
                 'authorization_grant_type': application.authorization_grant_type,
                 'redirect_uris': application.redirect_uris,
@@ -74,7 +75,7 @@ class CreateOAuth2ApplicationApi(APIView):
                 'updated': application.updated,
                 'user_id': application.user.id,
                 'message': message,
-                'note': 'Swagger redirect URI has been automatically added for API testing'
+                'note': 'IMPORTANT: Save the client_secret now! It is shown only once and cannot be retrieved later.'
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -219,7 +220,7 @@ class RegenerateClientSecretApi(APIView):
     def post(self, request, application_id):
         """Regenerate client secret for an OAuth2 application"""
         try:
-            application, message = regenerate_client_secret(
+            application, message, plain_text_secret = regenerate_client_secret(
                 user=request.user,
                 application_id=application_id
             )
@@ -230,12 +231,13 @@ class RegenerateClientSecretApi(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            # Return application with new client_secret
+            # Return application with the PLAIN TEXT new client_secret
+            # IMPORTANT: We return plain_text_secret, NOT application.client_secret
             return Response({
                 'id': application.id,
                 'name': application.name,
                 'client_id': application.client_id,
-                'client_secret': application.client_secret,  # New secret shown
+                'client_secret': plain_text_secret,  # Plain text secret, NOT the hashed one!
                 'client_type': application.client_type,
                 'authorization_grant_type': application.authorization_grant_type,
                 'redirect_uris': application.redirect_uris,
@@ -243,7 +245,8 @@ class RegenerateClientSecretApi(APIView):
                 'created': application.created,
                 'updated': application.updated,
                 'user_id': application.user.id,
-                'message': message
+                'message': message,
+                'note': 'IMPORTANT: Save the client_secret now! It is shown only once and cannot be retrieved later.'
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -292,5 +295,81 @@ class AddSwaggerRedirectUriApi(APIView):
         except Exception as e:
             return Response(
                 {'error': f'An error occurred'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class VerifyClientCredentialsApi(APIView):
+    """
+    Debug endpoint to verify OAuth2 client credentials.
+    This helps diagnose 'invalid_client' errors during token exchange.
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=['Developer Portal'],
+        description="Verify OAuth2 client credentials. Use this to debug 'invalid_client' errors.",
+        responses={
+            200: {'description': 'Client credentials are valid'},
+            400: {'description': 'Missing parameters'},
+            401: {'description': 'Invalid credentials'}
+        },
+        operation_id='verify_client_credentials'
+    )
+    def post(self, request):
+        """
+        Verify that client_id and client_secret match.
+        This is for debugging purposes only.
+        """
+        client_id = request.data.get('client_id')
+        client_secret = request.data.get('client_secret')
+        
+        if not client_id or not client_secret:
+            return Response(
+                {'error': 'Both client_id and client_secret are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Try to find the application by client_id
+            try:
+                application = Application.objects.get(client_id=client_id)
+            except Application.DoesNotExist:
+                return Response({
+                    'valid': False,
+                    'error': 'client_id not found',
+                    'detail': f'No application exists with client_id: {client_id[:10]}...'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Check if the secret matches
+            # In django-oauth-toolkit 1.x, secrets are stored in plain text
+            stored_secret = application.client_secret
+            
+            # Compare secrets
+            if stored_secret == client_secret:
+                return Response({
+                    'valid': True,
+                    'message': 'Client credentials are valid',
+                    'app_name': application.name,
+                    'client_type': application.client_type,
+                    'grant_type': application.authorization_grant_type,
+                }, status=status.HTTP_200_OK)
+            else:
+                # Provide some debug info (safely)
+                return Response({
+                    'valid': False,
+                    'error': 'client_secret does not match',
+                    'detail': {
+                        'provided_secret_length': len(client_secret),
+                        'stored_secret_length': len(stored_secret) if stored_secret else 0,
+                        'provided_secret_preview': f'{client_secret[:4]}...{client_secret[-4:]}' if len(client_secret) > 8 else '(too short)',
+                        'stored_secret_preview': f'{stored_secret[:4]}...{stored_secret[-4:]}' if stored_secret and len(stored_secret) > 8 else '(empty or too short)',
+                        'secrets_match': stored_secret == client_secret,
+                    }
+                }, status=status.HTTP_401_UNAUTHORIZED)
+                
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

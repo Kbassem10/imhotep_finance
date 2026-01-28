@@ -4,6 +4,7 @@ from .apis import (
     GetOAuth2ApplicationApi,
     RegenerateClientSecretApi,
     AddSwaggerRedirectUriApi,
+    VerifyClientCredentialsApi,
 )
 
 urlpatterns = [
@@ -15,4 +16,6 @@ urlpatterns = [
     path('apps/<int:application_id>/', GetOAuth2ApplicationApi.as_view(), name='delete_oauth2_application'),
     path('apps/<int:application_id>/regenerate-secret/', RegenerateClientSecretApi.as_view(), name='regenerate_client_secret'),
     path('apps/<int:application_id>/add-swagger-uri/', AddSwaggerRedirectUriApi.as_view(), name='add_swagger_redirect_uri'),
+    # Debug endpoint to verify client credentials
+    path('verify-credentials/', VerifyClientCredentialsApi.as_view(), name='verify_client_credentials'),
 ]

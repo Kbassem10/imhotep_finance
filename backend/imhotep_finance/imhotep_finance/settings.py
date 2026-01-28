@@ -370,6 +370,13 @@ OAUTH2_PROVIDER = {
     'REFRESH_TOKEN_MODEL': 'oauth2_provider.RefreshToken',
     # Grant model to use
     'GRANT_MODEL': 'oauth2_provider.Grant',
+    # PKCE (Proof Key for Code Exchange) - make it optional for backward compatibility
+    # Set to False to allow clients that don't support PKCE
+    # External apps can still use PKCE if they want (recommended for public clients)
+    'PKCE_REQUIRED': False,
+    # Explicitly disable client secret hashing to ensure secrets are stored in plain text
+    # This ensures the secret shown at creation time matches what's stored
+    'HASH_CLIENT_SECRET': False,
 }
 
 # Login URL for OAuth2 authorization flow

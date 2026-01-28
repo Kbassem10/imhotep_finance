@@ -22,7 +22,7 @@ class CreateOAuth2ApplicationServiceTest(TestCase):
 
     def test_create_application_success(self):
         """Test creating OAuth2 application via service"""
-        application, message = create_oauth2_application(
+        application, message, plain_text_secret = create_oauth2_application(
             user=self.user,
             name='My App',
             redirect_uris='https://myapp.com/callback'
@@ -33,10 +33,13 @@ class CreateOAuth2ApplicationServiceTest(TestCase):
         self.assertEqual(application.name, 'My App')
         self.assertEqual(application.user, self.user)
         self.assertTrue(Application.objects.filter(user=self.user, name='My App').exists())
+        # Verify plain text secret is returned and is not hashed
+        self.assertIsNotNone(plain_text_secret)
+        self.assertFalse(plain_text_secret.startswith('pbkdf2_sha256'))  # Not hashed
 
     def test_create_application_without_user(self):
         """Test creating application without user"""
-        application, message = create_oauth2_application(
+        application, message, plain_text_secret = create_oauth2_application(
             user=None,
             name='My App',
             redirect_uris='https://myapp.com/callback'
@@ -44,10 +47,11 @@ class CreateOAuth2ApplicationServiceTest(TestCase):
 
         self.assertIsNone(application)
         self.assertIn('User must be authenticated', message)
+        self.assertIsNone(plain_text_secret)
 
     def test_create_application_without_name(self):
         """Test creating application without name"""
-        application, message = create_oauth2_application(
+        application, message, plain_text_secret = create_oauth2_application(
             user=self.user,
             name='',
             redirect_uris='https://myapp.com/callback'
@@ -55,10 +59,11 @@ class CreateOAuth2ApplicationServiceTest(TestCase):
 
         self.assertIsNone(application)
         self.assertIn('Application name is required', message)
+        self.assertIsNone(plain_text_secret)
 
     def test_create_application_custom_client_type(self):
         """Test creating application with custom client type"""
-        application, message = create_oauth2_application(
+        application, message, plain_text_secret = create_oauth2_application(
             user=self.user,
             name='Public App',
             client_type='public',
@@ -67,6 +72,7 @@ class CreateOAuth2ApplicationServiceTest(TestCase):
 
         self.assertIsNotNone(application)
         self.assertEqual(application.client_type, 'public')
+        self.assertIsNotNone(plain_text_secret)
 
 
 class GetUserApplicationsServiceTest(TestCase):
@@ -234,28 +240,31 @@ class RegenerateClientSecretServiceTest(TestCase):
 
     def test_regenerate_client_secret_success(self):
         """Test regenerating client secret via service"""
-        application, message = regenerate_client_secret(
+        application, message, plain_text_secret = regenerate_client_secret(
             user=self.user,
             application_id=self.application.id
         )
 
         self.assertIsNotNone(application)
         self.assertIn('regenerated successfully', message)
-        self.assertNotEqual(application.client_secret, self.old_secret)
+        # Verify plain text secret is returned and is not hashed
+        self.assertIsNotNone(plain_text_secret)
+        self.assertFalse(plain_text_secret.startswith('pbkdf2_sha256'))  # Not hashed
 
-        # Verify in database
+        # Verify secret changed in database
         self.application.refresh_from_db()
         self.assertNotEqual(self.application.client_secret, self.old_secret)
 
     def test_regenerate_client_secret_not_found(self):
         """Test regenerating secret for non-existent application"""
-        application, message = regenerate_client_secret(
+        application, message, plain_text_secret = regenerate_client_secret(
             user=self.user,
             application_id=99999
         )
 
         self.assertIsNone(application)
         self.assertIn('not found', message.lower())
+        self.assertIsNone(plain_text_secret)
 
     def test_regenerate_client_secret_other_user(self):
         """Test that users cannot regenerate secrets for other users' applications"""
@@ -265,12 +274,13 @@ class RegenerateClientSecretServiceTest(TestCase):
             password='testpass123'
         )
 
-        application, message = regenerate_client_secret(
+        application, message, plain_text_secret = regenerate_client_secret(
             user=other_user,
             application_id=self.application.id
         )
 
         self.assertIsNone(application)
+        self.assertIsNone(plain_text_secret)
         # Verify secret was not changed
         self.application.refresh_from_db()
         self.assertEqual(self.application.client_secret, self.old_secret)
