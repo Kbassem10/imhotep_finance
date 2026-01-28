@@ -23,6 +23,7 @@ from .apis import (
     UpdateProfileApi,
     ChangePasswordApi,
     VerifyEmailChangeApi,
+    OAuthSessionBridgeApi,
 )
 
 urlpatterns = [
@@ -60,4 +61,7 @@ urlpatterns = [
     path('profile/update/', UpdateProfileApi.as_view(), name='update_profile'),
     path('profile/change-password/', ChangePasswordApi.as_view(), name='change_password'),
     path('profile/verify-email-change/', VerifyEmailChangeApi.as_view(), name='verify_email_change'),
+
+    # OAuth2 session bridge (for external app authorization flow)
+    path('auth/oauth-session-bridge/', OAuthSessionBridgeApi.as_view(), name='oauth_session_bridge'),
 ]

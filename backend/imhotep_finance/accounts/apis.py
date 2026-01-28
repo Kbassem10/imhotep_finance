@@ -40,8 +40,13 @@ from accounts.serializers import (
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
+from django.contrib.auth import get_user_model, login as django_login
+from urllib.parse import unquote
+
+User = get_user_model()
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewApi(APIView):
@@ -613,4 +618,116 @@ class VerifyEmailChangeApi(APIView):
             return Response(
                 {'error': message}, 
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class OAuthSessionBridgeApi(APIView):
+    """
+    Bridge endpoint that creates a Django session from a JWT token.
+    
+    This is needed for the OAuth2 flow because:
+    1. Frontend uses JWT tokens stored in localStorage
+    2. OAuth2 authorization endpoint requires session-based authentication
+    3. When redirecting from frontend to backend, we can't send Authorization headers
+    
+    Flow:
+    1. Frontend logs in user, gets JWT token
+    2. Frontend redirects to this endpoint with token and next URL
+    3. This endpoint validates JWT, creates Django session
+    4. Redirects to OAuth2 authorization page with session cookie set
+    """
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=['Authentication'],
+        description="Create a Django session from a JWT token and redirect to a URL. Used for OAuth2 authorization flow.",
+        parameters=[
+            OpenApiParameter(
+                name='token',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description='JWT access token'
+            ),
+            OpenApiParameter(
+                name='next',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description='URL to redirect to after creating session (URL encoded)'
+            ),
+        ],
+        responses={
+            302: {'description': 'Redirect to next URL with session cookie'},
+            400: {'description': 'Missing or invalid parameters'},
+            401: {'description': 'Invalid or expired token'}
+        },
+        operation_id='oauth_session_bridge'
+    )
+    def get(self, request):
+        """
+        Create a Django session from JWT token and redirect to the next URL.
+        This enables OAuth2 authorization flow when frontend uses JWT auth.
+        """
+        token = request.GET.get('token')
+        next_url = request.GET.get('next')
+        
+        if not token:
+            return HttpResponseBadRequest('Missing token parameter')
+        
+        if not next_url:
+            return HttpResponseBadRequest('Missing next parameter')
+        
+        # Decode the next URL (it may be URL encoded)
+        next_url = unquote(next_url)
+        
+        # Validate that next_url is pointing to our OAuth2 authorization endpoint
+        # This prevents open redirect vulnerabilities
+        from django.conf import settings
+        allowed_prefixes = [
+            '/o/authorize',
+            f'{settings.SITE_DOMAIN}/o/authorize',
+        ]
+        
+        is_valid_redirect = any(next_url.startswith(prefix) for prefix in allowed_prefixes)
+        if not is_valid_redirect:
+            return HttpResponseBadRequest('Invalid redirect URL. Must be an OAuth2 authorization URL.')
+        
+        try:
+            # Validate the JWT token
+            validated_token = UntypedToken(token)
+            
+            # Get user_id from the validated token
+            user_id = validated_token.get('user_id')
+            if not user_id:
+                return Response(
+                    {'error': 'Invalid token: no user_id'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            # Get the user
+            user = User.objects.get(id=user_id)
+            
+            # Create a Django session for this user
+            django_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+            # Redirect to the OAuth2 authorization URL
+            # The session cookie will be set automatically by Django
+            return HttpResponseRedirect(next_url)
+            
+        except (InvalidToken, TokenError) as e:
+            return Response(
+                {'error': f'Invalid or expired token: {str(e)}'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

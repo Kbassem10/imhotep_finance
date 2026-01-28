@@ -11,6 +11,7 @@ from django.urls import reverse
 from oauth2_provider.views import AuthorizationView
 from oauth2_provider.models import Application
 from django.conf import settings
+from imhotep_finance.settings import frontend_url
 from django.http import HttpResponseRedirect, HttpResponse
 from urllib.parse import urlencode, quote
 from rest_framework_simplejwt.tokens import UntypedToken
@@ -77,7 +78,7 @@ class CustomAuthorizationView(AuthorizationView):
                 encoded_next = quote(next_url, safe='')
                 
                 # Redirect to frontend login with next parameter
-                frontend_login_url = f"{settings.frontend_url}/login?next={encoded_next}"
+                frontend_login_url = f"{frontend_url}/login?next={encoded_next}"
                 return HttpResponseRedirect(frontend_login_url)
         
         # User is authenticated (via session or JWT), proceed with normal authorization flow

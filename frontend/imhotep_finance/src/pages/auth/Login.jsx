@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../../components/common/Footer';
 import Logo from '../../assets/Logo.jpeg';
+import { API_URL } from '../../config/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -79,10 +80,13 @@ const Login = () => {
     
     if (result.success) {
       login(result.data);
-      // If there's a next URL (from OAuth2 flow), redirect there, otherwise go to dashboard
+      // If there's a next URL (from OAuth2 flow), redirect through session bridge
       if (nextUrl) {
-        // Redirect to the OAuth2 authorization URL
-        window.location.href = nextUrl;
+        // Redirect through session bridge to create a Django session for OAuth2 flow
+        // This is needed because the backend OAuth2 authorization endpoint requires session auth,
+        // but the frontend uses JWT tokens stored in localStorage
+        const sessionBridgeUrl = `${API_URL}/api/auth/oauth-session-bridge/?token=${encodeURIComponent(result.data.access)}&next=${encodeURIComponent(nextUrl)}`;
+        window.location.href = sessionBridgeUrl;
       } else {
         navigate('/dashboard');
       }
@@ -131,7 +135,14 @@ const Login = () => {
       const { access, refresh, user: userData } = response.data;
       
       login({ access, refresh, user: userData });
-      navigate('/dashboard');
+      
+      // If there's a next URL (from OAuth2 flow), redirect through session bridge
+      if (nextUrl) {
+        const sessionBridgeUrl = `${API_URL}/api/auth/oauth-session-bridge/?token=${encodeURIComponent(access)}&next=${encodeURIComponent(nextUrl)}`;
+        window.location.href = sessionBridgeUrl;
+      } else {
+        navigate('/dashboard');
+      }
       
     } catch (error) {
       console.error('Demo login failed:', error);
