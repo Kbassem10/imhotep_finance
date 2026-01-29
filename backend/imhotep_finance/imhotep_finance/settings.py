@@ -67,7 +67,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'oauth2_provider',  # django-oauth-toolkit
     'corsheaders',
     'csp',
     'drf_spectacular',
@@ -78,15 +77,12 @@ INSTALLED_APPS = [
     'transaction_management',
     'user_reports',
     'wishlist_management',
-    'developer_portal',
-    'public_api',
 ]
 
 # REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  # OAuth2 support
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -346,41 +342,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 FIELD_ENCRYPTION_KEY = config('FIELD_ENCRYPTION_KEY')
-
-# OAuth2 Provider Configuration (django-oauth-toolkit)
-OAUTH2_PROVIDER = {
-    # This is the list of available scopes for your application
-    'SCOPES': {
-        'read': 'Read access to your financial data',
-        'write': 'Write access to create/delete transactions',
-        'transactions:read': 'Read transaction data',
-        'transactions:write': 'Create and delete transactions',
-    },
-    # Default scopes to request if none are specified
-    'DEFAULT_SCOPES': ['read'],
-    # Access token expiration time (default: 1 hour)
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-    # Authorization code expiration time (default: 10 minutes)
-    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
-    # Application model to use
-    'APPLICATION_MODEL': 'oauth2_provider.Application',
-    # Access token model to use
-    'ACCESS_TOKEN_MODEL': 'oauth2_provider.AccessToken',
-    # Refresh token model to use
-    'REFRESH_TOKEN_MODEL': 'oauth2_provider.RefreshToken',
-    # Grant model to use
-    'GRANT_MODEL': 'oauth2_provider.Grant',
-    # PKCE (Proof Key for Code Exchange) - make it optional for backward compatibility
-    # Set to False to allow clients that don't support PKCE
-    # External apps can still use PKCE if they want (recommended for public clients)
-    'PKCE_REQUIRED': False,
-    # Explicitly disable client secret hashing to ensure secrets are stored in plain text
-    # This ensures the secret shown at creation time matches what's stored
-    'HASH_CLIENT_SECRET': False,
-}
-
-# Login URL for OAuth2 authorization flow
-LOGIN_URL = '/api/auth/login/'
 
 UNFOLD = {
     "COMMAND_PALETTE": {

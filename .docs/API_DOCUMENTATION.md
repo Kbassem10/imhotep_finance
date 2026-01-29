@@ -62,17 +62,6 @@ Content-Type: application/json
   "refresh": "your_refresh_token"
 }
 ```
-
-### 2. OAuth2 Authentication (Public API)
-
-For third-party applications, use OAuth2 authentication. See [OAuth2 Public API Documentation](oauth2-public-api.md) for complete details.
-
-**Quick Overview:**
-1. Register your application at `/developer`
-2. Get Client ID and Secret
-3. Implement OAuth2 Authorization Code Flow
-4. Use access tokens to call `/api/v1/external/transaction/` endpoints
-
 ### 3. Google OAuth (User Login)
 
 Users can log in with their Google account:
@@ -188,21 +177,6 @@ Content-Type: application/json
 - `PUT /api/profile/` - Update user profile
 - `POST /api/profile/change-email/` - Request email change
 - `POST /api/profile/verify-email-change/` - Verify email change
-
-### Developer Portal
-
-- `POST /api/developer/apps/` - Create OAuth2 application
-- `GET /api/developer/apps/` - List applications
-- `GET /api/developer/apps/{id}/` - Get application
-- `DELETE /api/developer/apps/{id}/` - Delete application
-- `POST /api/developer/apps/{id}/regenerate-secret/` - Regenerate client secret
-- `POST /api/developer/apps/{id}/add-swagger-uri/` - Add Swagger redirect URI
-
-### Public API (OAuth2)
-
-- `POST /api/v1/external/transaction/add/` - Create transaction (OAuth2)
-- `GET /api/v1/external/transaction/list/` - List transactions (OAuth2)
-- `DELETE /api/v1/external/transaction/delete/{id}/` - Delete transaction (OAuth2)
 
 ## Response Formats
 

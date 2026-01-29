@@ -81,15 +81,7 @@ const Login = () => {
     if (result.success) {
       login(result.data);
       // If there's a next URL (from OAuth2 flow), redirect through session bridge
-      if (nextUrl) {
-        // Redirect through session bridge to create a Django session for OAuth2 flow
-        // This is needed because the backend OAuth2 authorization endpoint requires session auth,
-        // but the frontend uses JWT tokens stored in localStorage
-        const sessionBridgeUrl = `${API_URL}/api/auth/oauth-session-bridge/?token=${encodeURIComponent(result.data.access)}&next=${encodeURIComponent(nextUrl)}`;
-        window.location.href = sessionBridgeUrl;
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     } else {
       setError(result.error);
       if (result.info) {
@@ -135,14 +127,9 @@ const Login = () => {
       const { access, refresh, user: userData } = response.data;
       
       login({ access, refresh, user: userData });
-      
-      // If there's a next URL (from OAuth2 flow), redirect through session bridge
-      if (nextUrl) {
-        const sessionBridgeUrl = `${API_URL}/api/auth/oauth-session-bridge/?token=${encodeURIComponent(access)}&next=${encodeURIComponent(nextUrl)}`;
-        window.location.href = sessionBridgeUrl;
-      } else {
-        navigate('/dashboard');
-      }
+
+      navigate('/dashboard');
+  
       
     } catch (error) {
       console.error('Demo login failed:', error);

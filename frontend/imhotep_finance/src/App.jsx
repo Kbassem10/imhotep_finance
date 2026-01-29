@@ -23,8 +23,6 @@ import ShowWishlist from './pages/main/ShowWishlist'
 import ShowScheduledTransactions from './pages/main/ShowScheduledTransactions'
 import ShowTargetHistory from './pages/main/ShowTargetHistory'
 import Reports from './pages/main/Reports'
-import DeveloperDashboard from './pages/developer/DeveloperDashboard'
-import OAuthTestPage from './pages/developer/OAuthTestPage'
 import Version from './components/common/Version'
 
 // PWA Components
@@ -153,22 +151,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/developer"
-              element={
-                <ProtectedRoute>
-                  <DeveloperDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/developer/oauth-test"
-              element={
-                <ProtectedRoute>
-                  <OAuthTestPage />
                 </ProtectedRoute>
               }
             />

@@ -47,18 +47,6 @@ imhotep_finance/
 │   │   │   ├── models.py         # UserReport model
 │   │   │   ├── apis.py           # Report APIs
 │   │   │   └── services.py      # Report generation
-│   │   ├── developer_portal/     # OAuth2 developer portal
-│   │   │   ├── models.py         # DeveloperProfile model
-│   │   │   ├── apis.py           # Application management APIs
-│   │   │   ├── services.py      # OAuth2 app creation logic
-│   │   │   ├── oauth_views.py   # Custom OAuth2 authorization
-│   │   │   ├── swagger_views.py  # Swagger OAuth2 redirect
-│   │   │   └── tests/           # Developer portal tests
-│   │   ├── public_api/           # Public API for third-party apps
-│   │   │   ├── apis.py           # External transaction APIs
-│   │   │   ├── permissions.py   # OAuth2 scope validation
-│   │   │   ├── serializers.py   # External API serializers
-│   │   │   └── tests/           # Public API tests
 │   │   ├── imhotep_finance/      # Django settings
 │   │   │   ├── settings.py       # Main settings
 │   │   │   ├── settings_test.py  # Test-specific settings
@@ -102,7 +90,6 @@ imhotep_finance/
 ├── .docs/                        # Documentation
 │   ├── SETUP.md                  # Setup guide
 │   ├── API_DOCUMENTATION.md      # API docs
-│   ├── oauth2-public-api.md      # OAuth2 Public API docs
 │   ├── ENVIRONMENT_VARIABLES.md  # Environment config
 │   ├── FOLDER_STRUCTURE.md       # This file
 │   ├── TESTING.md                # Testing guide
@@ -128,8 +115,6 @@ imhotep_finance/
 - **`target_management/`**: Savings goals and targets
 - **`wishlist_management/`**: Wishlist items tracking
 - **`user_reports/`**: Financial reports and analytics
-- **`developer_portal/`**: OAuth2 application management
-- **`public_api/`**: Public API endpoints for third-party apps
 
 ### Frontend Structure
 
