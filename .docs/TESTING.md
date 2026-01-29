@@ -62,13 +62,6 @@ python manage.py test accounts
 # Transaction management
 python manage.py test transaction_management
 
-# Developer portal
-python manage.py test developer_portal
-
-# Public API
-python manage.py test public_api
-```
-
 **Run a specific test file:**
 ```bash
 # API tests
@@ -134,20 +127,6 @@ python manage.py test accounts --parallel
 - Transaction filtering and pagination
 - CSV import functionality
 - Transaction validation
-
-**Developer Portal:**
-- OAuth2 application creation
-- Application management
-- Client secret regeneration
-- Swagger redirect URI management
-
-**Public API:**
-- OAuth2 authentication
-- Scope validation
-- Transaction creation (external)
-- Transaction listing (external)
-- Transaction deletion (external)
-- User data isolation
 
 ### Writing New Tests
 
@@ -256,25 +235,12 @@ src/
 
 ## Integration Testing
 
-### OAuth2 Flow Testing
-
-Test the complete OAuth2 flow using the provided test scripts:
-
-```bash
-# Complete OAuth2 flow test
-./test_oauth2_flow.sh
-
-# External app integration simulation
-./test_external_app_integration.sh
-```
-
 ### Manual Integration Testing
 
 1. **Start the application**: `docker compose up`
 2. **Test user registration**: Create a new account
 3. **Test authentication**: Log in and verify JWT token
 4. **Test API endpoints**: Use Swagger UI to test endpoints
-5. **Test OAuth2 flow**: Use Developer Portal to create an app and test OAuth2
 
 ## Test Statistics
 

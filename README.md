@@ -101,16 +101,6 @@ See the [Setup Guide](.docs/SETUP.md) for detailed deployment instructions.
 - User data isolation
 
 </td>
-<td width="50%">
-
-### 🔌 Public API
-- OAuth2 Authorization Code Flow
-- Developer Portal for app management
-- Scope-based permissions
-- Third-party integrations
-- Complete API documentation
-
-</td>
 </tr>
 <tr>
 <td width="50%">
@@ -176,7 +166,6 @@ Comprehensive documentation is available in the `.docs/` folder:
 |----------|-------------|
 | [🚀 Setup Guide](.docs/SETUP.md) | Prerequisites, Docker & manual installation, initial configuration |
 | [📘 API Documentation](.docs/API_DOCUMENTATION.md) | Swagger/OpenAPI docs, JWT authorization, endpoint reference |
-| [🔌 OAuth2 Public API](.docs/oauth2-public-api.md) | Complete guide for third-party developers, OAuth2 integration |
 | [⚙️ Environment Variables](.docs/ENVIRONMENT_VARIABLES.md) | Backend & frontend configuration, production setup |
 | [🧩 Folder Structure](.docs/FOLDER_STRUCTURE.md) | Project organization and architecture |
 | [🧪 Testing Guide](.docs/TESTING.md) | Running & writing tests, test structure |
@@ -194,8 +183,8 @@ Comprehensive documentation is available in the `.docs/` folder:
 | React 19 | Django 5.2 | PostgreSQL | Docker |
 | Vite | Django REST Framework | | Docker Compose |
 | Tailwind CSS | JWT Auth | | |
-| React Router | OAuth2 Provider | | |
-| Axios | drf-spectacular | | |
+| React Router | drf-spectacular | | |
+| Axios |  | | |
 
 </div>
 
@@ -217,28 +206,6 @@ Comprehensive documentation is available in the `.docs/` folder:
   <p><em>Monthly Reports</em></p>
 </div>
 
----
-
-## 🔌 Public API for Developers
-
-Imhotep Finance provides a **Public API** for third-party developers to integrate with the platform. External applications can securely manage user transactions using OAuth2 authentication.
-
-**Key Features:**
-- ✅ OAuth2 Authorization Code Flow (RFC 6749 compliant)
-- ✅ Scope-based permissions for granular access control
-- ✅ Developer Portal for easy application management
-- ✅ Complete transaction management (Create, Read, Delete)
-- ✅ Comprehensive API documentation
-
-**📖 [View Full OAuth2 Public API Documentation →](.docs/oauth2-public-api.md)**
-
-**Quick Start for Developers:**
-1. Register your application at `/developer`
-2. Get Client ID and Secret
-3. Implement OAuth2 flow in your app
-4. Use access tokens to call `/api/v1/external/transaction/` endpoints
-
----
 
 ## 👥 Contributing
 

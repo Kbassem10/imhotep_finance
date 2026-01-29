@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../../components/common/Footer';
 import Logo from '../../assets/Logo.jpeg';
+import { API_URL } from '../../config/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -79,13 +80,8 @@ const Login = () => {
     
     if (result.success) {
       login(result.data);
-      // If there's a next URL (from OAuth2 flow), redirect there, otherwise go to dashboard
-      if (nextUrl) {
-        // Redirect to the OAuth2 authorization URL
-        window.location.href = nextUrl;
-      } else {
-        navigate('/dashboard');
-      }
+      // If there's a next URL (from OAuth2 flow), redirect through session bridge
+      navigate('/dashboard');
     } else {
       setError(result.error);
       if (result.info) {
@@ -131,7 +127,9 @@ const Login = () => {
       const { access, refresh, user: userData } = response.data;
       
       login({ access, refresh, user: userData });
+
       navigate('/dashboard');
+  
       
     } catch (error) {
       console.error('Demo login failed:', error);
