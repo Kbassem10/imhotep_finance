@@ -89,8 +89,24 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # drf-spectacular configuration for automatic OpenAPI schema generation
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Throttling configuration (no custom exception handler needed)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'imhotep_finance.throttles.CustomUserRateThrottle',
+        'imhotep_finance.throttles.CustomAnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/hour',
+        'anon': '100/hour',
+        'strict_user': '50/hour',
+        'auth': '5/minute',
+        'login': '5/minute',
+        'register': '3/hour',
+        'password_reset': '3/hour',
+        'transaction_import': '10/hour',
+        'bulk_operations': '20/hour',
+        'report_generation': '30/hour',
+    },
 }
 
 # Simple JWT configuration

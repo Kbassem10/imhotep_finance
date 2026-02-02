@@ -48,6 +48,13 @@ from urllib.parse import unquote
 
 User = get_user_model()
 
+from imhotep_finance.throttles import (
+    LoginRateThrottle,
+    RegistrationRateThrottle,
+    PasswordResetRateThrottle,
+    AuthenticationRateThrottle
+)
+
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewApi(APIView):
     permission_classes = [IsAuthenticated]
@@ -137,12 +144,13 @@ class UpdateUserLastLoginApi(APIView):
 
 class LoginApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Authenticate using username or email and password.",
         request=LoginRequestSerializer,
-        responses={200: LoginResponseSerializer, 400: 'Invalid credentials', 401: 'Unauthorized'},
+        responses={200: LoginResponseSerializer, 400: 'Invalid credentials', 401: 'Unauthorized', 429: 'Rate limit exceeded'},
         operation_id='login'
     )
     def post(self, request):
@@ -226,12 +234,13 @@ class DemoLoginApi(APIView):
 
 class RegisterApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [RegistrationRateThrottle]
     
     @extend_schema(
         tags=['Authentication'],
         description="Register a new user.",
         request=RegisterRequestSerializer,
-        responses={201: 'User created successfully', 400: 'Validation error'},
+        responses={201: 'User created successfully', 400: 'Validation error', 429: 'Rate limit exceeded'},
         operation_id='register'
     )
     def post(self, request):
@@ -346,12 +355,13 @@ class LogoutApi(APIView):
 
 class PasswordResetRequestApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [PasswordResetRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Request a password reset email to be sent.",
         request=PasswordResetRequestSerializer,
-        responses={200: {'description': 'Password reset email sent'}, 400: {'description': 'Invalid email'}},
+        responses={200: {'description': 'Password reset email sent'}, 400: {'description': 'Invalid email'}, 429: 'Rate limit exceeded'},
         operation_id='password_reset_request'
     )
     def post(self, request):
@@ -438,11 +448,12 @@ class PasswordResetValidateApi(APIView):
 
 class GoogleLoginUrlApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthenticationRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Get Google OAuth2 login URL for frontend.",
-        responses={200: {'type': 'object', 'properties': {'auth_url': {'type': 'string'}}}},
+        responses={200: {'type': 'object', 'properties': {'auth_url': {'type': 'string'}}}, 429: 'Rate limit exceeded'},
         operation_id='get_google_login_url'
     )
     def get(self, request):
@@ -452,12 +463,13 @@ class GoogleLoginUrlApi(APIView):
 
 class GoogleAuthApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthenticationRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Authenticate with Google OAuth2 authorization code.",
         request=GoogleAuthRequestSerializer,
-        responses={200: GoogleAuthResponseSerializer, 400: {'description': 'Invalid code'}},
+        responses={200: GoogleAuthResponseSerializer, 400: {'description': 'Invalid code'}, 429: 'Rate limit exceeded'},
         operation_id='google_authenticate'
     )
     def post(self, request):

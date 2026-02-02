@@ -17,6 +17,7 @@ def login_user(username_or_email, password):
     if not username_or_email or not password:
         return None, "Username/email and password are required"
 
+    user = None
     if '@' in username_or_email:
         # Input is an email
         user = User.objects.filter(email=username_or_email).first()
@@ -39,13 +40,19 @@ def login_user(username_or_email, password):
                 mail_subject = 'Activate your Imhotep Finance account'
                 current_site = SITE_DOMAIN.rstrip('/')
                 message = render_to_string('activate_mail_send.html', {
-                    'user': user,
+                    'user': authenticated_user,
                     'domain': current_site,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
+                    'uid': urlsafe_base64_encode(force_bytes(authenticated_user.pk)),
+                    'token': default_token_generator.make_token(authenticated_user),
                     'frontend_url': frontend_url
                 })
-                send_mail(mail_subject, message, 'imhoteptech1@gmail.com', [user.email], html_message=message)
+                send_mail(
+                    mail_subject,
+                    message,
+                    'imhoteptech1@gmail.com',
+                    [authenticated_user.email],
+                    html_message=message
+                )
                 return authenticated_user, "Email not verified. Verification email sent."
             except Exception as email_error:
                 # If email fails, still create the user but log the error
@@ -88,6 +95,7 @@ def register_user(username, email, password, first_name='', last_name=''):
         return None, f'Email {email} is already registered'
 
     # Create a new user
+    user = None  # Initialize user variable
     try:
         user = User.objects.create_user(
             username=username,
@@ -98,7 +106,8 @@ def register_user(username, email, password, first_name='', last_name=''):
             last_name=last_name
         )
         user.save()
-    except Exception:
+    except Exception as e:
+        print(f"Failed to create user: {str(e)}")
         return None, f'Failed to create user'
 
     # Send verification email
@@ -116,6 +125,7 @@ def register_user(username, email, password, first_name='', last_name=''):
         return user, 'User created successfully. Verification email sent.'
     except Exception as email_error:
         print(f"Failed to send verification email: {str(email_error)}")
+        # user is defined at this point, so we can return it
         return user, 'User created successfully. Verification email sending failed.'
     
 def verify_email(uid, token):
