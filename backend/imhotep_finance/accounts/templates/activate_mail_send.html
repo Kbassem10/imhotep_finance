@@ -227,18 +227,17 @@
         <div class="content">
             <p>Thank you for joining our portfolio hosting community. You're just one step away from getting your professional portfolio online!</p>
             
-            <p>To complete your account setup and start hosting your portfolio, please verify your email address by clicking the button below:</p>
+            <p>To complete your account setup and start hosting your portfolio, please use the following One-Time Password (OTP) to verify your email address:</p>
             
-            <div class="button-container">
-                <a href="{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}/" class="button">
-                    ✨ Verify Email Address
-                </a>
+            <div style="text-align: center; margin: 2rem 0;">
+                <div style="font-size: 2.5rem; letter-spacing: 0.5rem; font-weight: bold; color: var(--teal); background: #f0f7f7; padding: 1rem 2rem; border-radius: 12px; display: inline-block; border: 2px dashed var(--teal);">
+                    {{ otp }}
+                </div>
             </div>
             
-            <div class="link-fallback">
-                <p><strong>If the button above doesn't work,</strong> you can copy and paste the following link into your browser:</p>
-                <div class="link-text">{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}/</div>
-            </div>
+            <p style="text-align: center; color: var(--muted); font-size: 0.9rem;">
+                This code will expire in 15 minutes.
+            </p>
             
             <div class="warning">
                 <strong>🔒 Security Notice:</strong> This verification link will expire in <strong>24 hours</strong> for your account security. If you need a new verification link, please register again or contact our support team.

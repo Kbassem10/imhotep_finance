@@ -16,24 +16,24 @@ const ForgotPassword = () => {
       const response = await axios.post('/api/auth/password-reset/', {
         email,
       });
-      
-      return { 
-        success: true, 
-        message: response.data.message 
+
+      return {
+        success: true,
+        message: response.data.message
       };
     } catch (error) {
       console.error('Password reset request failed:', error);
-      
+
       let errorMessage = 'Password reset request failed';
-      
+
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.response?.status === 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
-      return { 
-        success: false, 
+
+      return {
+        success: false,
         error: errorMessage
       };
     }
@@ -56,14 +56,14 @@ const ForgotPassword = () => {
     }
 
     const result = await requestPasswordReset(email);
-    
+
     if (result.success) {
       setSuccess(true);
       setMessage(result.message);
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -75,8 +75,8 @@ const ForgotPassword = () => {
         {/* Floating decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
         </div>
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="relative w-full max-w-md">
@@ -86,8 +86,8 @@ const ForgotPassword = () => {
               {/* Success Icon */}
               <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-6 shadow-lg">
                 <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
               <div
@@ -108,17 +108,18 @@ const ForgotPassword = () => {
                 Check Your Email!
               </h2>
               <p className="text-gray-600 dark:text-gray-300 font-medium mb-8 leading-relaxed">
-                {message || "We've sent you a password reset link. Please check your email and follow the instructions to reset your password."}
+                {message || "We've sent you a password reset OTP. Please check your email."}
               </p>
               <Link
-                to="/login"
+                to="/reset-password"
+                state={{ email: email }}
                 className="chef-button inline-block text-center no-underline"
                 style={{
                   background: 'linear-gradient(90deg, #366c6b 0%, #1a3535 100%)',
                   color: 'white',
                 }}
               >
-                Back to Login
+                Enter OTP & Reset Password
               </Link>
             </div>
             <div className="text-center mt-8">
@@ -140,8 +141,8 @@ const ForgotPassword = () => {
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
       </div>
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="relative w-full max-w-md">

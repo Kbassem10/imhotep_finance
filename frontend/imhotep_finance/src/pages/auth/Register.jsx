@@ -17,7 +17,7 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
   const [showPasswordState, setShowPasswordState] = useState(false);
   const [showPasswordState2, setShowPasswordState2] = useState(false);
-  
+
   const { } = useAuth();
   const navigate = useNavigate();
 
@@ -37,15 +37,15 @@ const Register = () => {
         password,
         password2,
       });
-      
+
       return { success: true, message: 'Registration successful' };
     } catch (error) {
       console.error('Registration failed:', error);
-      
+
       let errorMessage = 'Registration failed';
-      
+
       if (error.response?.data?.error) {
-        errorMessage = Array.isArray(error.response.data.error) 
+        errorMessage = Array.isArray(error.response.data.error)
           ? error.response.data.error.join(', ')
           : error.response.data.error;
       } else if (error.response?.data?.message) {
@@ -53,9 +53,9 @@ const Register = () => {
       } else if (error.response?.status === 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
-      return { 
-        success: false, 
+
+      return {
+        success: false,
         error: errorMessage
       };
     }
@@ -73,19 +73,19 @@ const Register = () => {
     }
 
     const result = await registerUser(
-      formData.username, 
-      formData.email, 
-      formData.password, 
+      formData.username,
+      formData.email,
+      formData.password,
       formData.password2
     );
-    
+
     if (result.success) {
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/verify-otp', { state: { email: formData.email } }), 2000);
     } else {
       setError(typeof result.error === 'string' ? result.error : 'Registration failed');
     }
-    
+
     setLoading(false);
   };
 
@@ -105,8 +105,8 @@ const Register = () => {
         {/* Floating decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
         </div>
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="relative w-full max-w-md">
@@ -137,10 +137,10 @@ const Register = () => {
                 Welcome to the Kitchen!
               </h2>
               <p className="text-gray-600 dark:text-gray-300 font-medium mb-8">
-                Your culinary journey begins now! Please check your email and click the verification link to activate your account before logging in.
+                Your culinary journey begins now! Please check your email for the OTP code to activate your account.
               </p>
               <Link
-                to="/login"
+                to="/verify-otp"
                 className="chef-button inline-block text-center no-underline"
                 style={{
                   background: 'linear-gradient(90deg, #366c6b 0%, #1a3535 100%)',
@@ -169,8 +169,8 @@ const Register = () => {
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
       </div>
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -238,7 +238,7 @@ const Register = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Username
                   </label>
                   <div className="relative">
@@ -260,7 +260,7 @@ const Register = () => {
                   </div>
                 </div>
                 <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Email Address
                   </label>
                   <div className="relative">
@@ -282,7 +282,7 @@ const Register = () => {
                   </div>
                 </div>
                 <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Password
                   </label>
                   <div className="relative">
@@ -321,7 +321,7 @@ const Register = () => {
                   </div>
                 </div>
                 <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Confirm Password
                   </label>
                   <div className="relative">

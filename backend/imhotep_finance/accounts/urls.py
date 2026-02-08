@@ -13,9 +13,11 @@ from .apis import (
     DemoLoginApi,
     LogoutApi,
     RegisterApi,
+
     VerifyEmailApi,
+    VerifyAccountOTPApi,
     PasswordResetRequestApi,
-    PasswordResetConfirmApi,
+    PasswordResetConfirmOTPApi,
     PasswordResetValidateApi,
     GoogleLoginUrlApi,
     GoogleAuthApi,
@@ -23,6 +25,7 @@ from .apis import (
     UpdateProfileApi,
     ChangePasswordApi,
     VerifyEmailChangeApi,
+    VerifyEmailChangeOTPApi,
 )
 
 urlpatterns = [
@@ -41,13 +44,14 @@ urlpatterns = [
     path('auth/login/demo/', DemoLoginApi.as_view(), name='demo_login'),
     path('auth/logout/', LogoutApi.as_view(), name='logout'),
     path('auth/register/', RegisterApi.as_view(), name='register'),
-    path('auth/verify-email/', VerifyEmailApi.as_view(), name='verify_email'),
+    path('auth/verify-email/', VerifyEmailApi.as_view(), name='verify_email'), # Keep legacy or update if FE updated
+    path('auth/verify-otp/', VerifyAccountOTPApi.as_view(), name='verify_otp'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     # Password Reset endpoints
     path('auth/password-reset/', PasswordResetRequestApi.as_view(), name='password_reset_request'),
-    path('auth/password-reset/confirm/', PasswordResetConfirmApi.as_view(), name='password_reset_confirm'),
+    path('auth/password-reset/confirm/', PasswordResetConfirmOTPApi.as_view(), name='password_reset_confirm'),
     path('auth/password-reset/validate/', PasswordResetValidateApi.as_view(), name='password_reset_validate'),
 
     # Google OAuth endpoints
@@ -60,5 +64,6 @@ urlpatterns = [
     path('profile/update/', UpdateProfileApi.as_view(), name='update_profile'),
     path('profile/change-password/', ChangePasswordApi.as_view(), name='change_password'),
     path('profile/verify-email-change/', VerifyEmailChangeApi.as_view(), name='verify_email_change'),
+    path('profile/verify-email-change-otp/', VerifyEmailChangeOTPApi.as_view(), name='verify_email_change_otp'),
 
 ]

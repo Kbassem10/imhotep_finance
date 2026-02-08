@@ -10,6 +10,8 @@ class User(AbstractUser):
     
     email_verify = models.BooleanField(default=False, verbose_name="Email Verified")
     favorite_currency = models.CharField(default='USD', verbose_name="Favorite Currency", max_length=4)
+    otp_code = models.CharField(max_length=6, null=True, blank=True, verbose_name="OTP Code")
+    otp_created_at = models.DateTimeField(null=True, blank=True, verbose_name="OTP Created At")
 
     def __str__(self):
         return f"{self.username} ({self.email})"

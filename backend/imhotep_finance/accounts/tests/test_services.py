@@ -4,6 +4,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from unittest.mock import patch, MagicMock
 from accounts.models import User
+from django.utils import timezone
 from accounts.services import (
     login_user,
     demo_login,
@@ -11,7 +12,8 @@ from accounts.services import (
     verify_email,
     logout_user,
     request_password_reset,
-    confirm_password_reset,
+    request_password_reset,
+    confirm_password_reset_otp,
     validate_password_reset_token,
     update_user_profile,
     change_user_password,
@@ -145,28 +147,37 @@ class PasswordResetServiceTests(TestCase):
     def test_request_password_reset_success(self, mock_send_mail):
         success, message = request_password_reset('test@example.com')
         self.assertTrue(success)
-        self.assertIn('password reset link has been sent', message)
+        self.assertIn('password reset OTP has been sent', message)
         mock_send_mail.assert_called_once()
 
     @patch('accounts.services.send_mail')
     def test_request_password_reset_nonexistent_email(self, mock_send_mail):
         success, message = request_password_reset('nonexistent@example.com')
         self.assertTrue(success)  # Returns success for security
-        self.assertIn('password reset link has been sent', message)
+        self.assertIn('password reset OTP has been sent', message)
 
-    def test_confirm_password_reset_success(self):
-        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
-        token = default_token_generator.make_token(self.user)
-        success, message = confirm_password_reset(uid, token, 'NewPass123!')
+    def test_confirm_password_reset_otp_success(self):
+        # Generate OTP
+        otp = '123456'
+        self.user.otp_code = otp
+        self.user.otp_created_at = timezone.now()
+        self.user.save()
+        
+        success, message = confirm_password_reset_otp(self.user.email, otp, 'NewPass123!')
         self.assertTrue(success)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('NewPass123!'))
 
-    def test_confirm_password_reset_invalid_token(self):
-        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
-        success, message = confirm_password_reset(uid, 'invalid-token', 'NewPass123!')
+    def test_confirm_password_reset_otp_invalid_otp(self):
+        # Generate OTP
+        otp = '123456'
+        self.user.otp_code = otp
+        self.user.otp_created_at = timezone.now()
+        self.user.save()
+        
+        success, message = confirm_password_reset_otp(self.user.email, '654321', 'NewPass123!')
         self.assertFalse(success)
-        self.assertIn('Invalid or expired', message)
+        self.assertIn('Invalid OTP', message)
 
     def test_validate_password_reset_token_valid(self):
         uid = urlsafe_base64_encode(force_bytes(self.user.pk))
@@ -214,7 +225,7 @@ class ProfileServiceTests(TestCase):
     def test_update_user_profile_email(self, mock_send_mail):
         user, message = update_user_profile(self.user, email='newemail@example.com')
         self.assertIsNotNone(user)
-        self.assertIn('Email verification sent', message)
+        self.assertIn('Email verification OTP sent', message)
         mock_send_mail.assert_called_once()
 
     def test_update_demo_user_profile_denied(self):

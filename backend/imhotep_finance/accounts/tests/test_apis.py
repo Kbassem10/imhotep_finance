@@ -99,12 +99,16 @@ class PasswordResetAPITests(TestCase):
         mock_send_mail.assert_called_once()
 
     def test_password_reset_confirm(self):
-        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
-        token = default_token_generator.make_token(self.user)
+        # Setup OTP
+        otp = '123456'
+        self.user.otp_code = otp
+        from django.utils import timezone
+        self.user.otp_created_at = timezone.now()
+        self.user.save()
         
         response = self.client.post(reverse('password_reset_confirm'), {
-            'uid': uid,
-            'token': token,
+            'email': self.user.email,
+            'otp': otp,
             'new_password': 'NewPass123!',
             'confirm_password': 'NewPass123!'
         })

@@ -1,108 +1,66 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../../components/common/Footer';
 import Logo from '../../assets/Logo.jpeg';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
+    email: '',
+    otp: '',
     new_password: '',
     confirm_password: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(true);
-  const [isValidToken, setIsValidToken] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
   const [success, setSuccess] = useState(false);
-  
+
   const [showPasswordState, setShowPasswordState] = useState(false);
   const [showPasswordState2, setShowPasswordState2] = useState(false);
-  
+
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  
-  const uid = searchParams.get('uid');
-  const token = searchParams.get('token');
+  const location = useLocation();
 
-  const validatePasswordResetToken = async (uid, token) => {
-    try {
-      const response = await axios.post('/api/auth/password-reset/validate/', {
-        uid,
-        token,
-      });
-      
-      return { 
-        success: true, 
-        valid: response.data.valid,
-        email: response.data.email 
-      };
-    } catch (error) {
-      console.error('Password reset validation failed:', error);
-      
-      return { 
-        success: false, 
-        valid: false,
-        error: error.response?.data?.error || 'Invalid or expired reset link'
-      };
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData(prev => ({ ...prev, email: location.state.email }));
     }
-  };
+  }, [location.state]);
 
-  const confirmPasswordReset = async (uid, token, newPassword, confirmPassword) => {
+  const confirmPasswordReset = async (email, otp, newPassword, confirmPassword) => {
     try {
       const response = await axios.post('/api/auth/password-reset/confirm/', {
-        uid,
-        token,
+        email,
+        otp,
         new_password: newPassword,
         confirm_password: confirmPassword,
       });
-      
-      return { 
-        success: true, 
-        message: response.data.message 
+
+      return {
+        success: true,
+        message: response.data.message
       };
     } catch (error) {
       console.error('Password reset confirmation failed:', error);
-      
+
       let errorMessage = 'Password reset failed';
-      
+
       if (error.response?.data?.error) {
-        errorMessage = Array.isArray(error.response.data.error) 
+        errorMessage = Array.isArray(error.response.data.error)
           ? error.response.data.error.join(', ')
           : error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       } else if (error.response?.status === 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
-      return { 
-        success: false, 
+
+      return {
+        success: false,
         error: errorMessage
       };
     }
   };
-
-  useEffect(() => {
-    const validateToken = async () => {
-      if (!uid || !token) {
-        setError('Invalid password reset link');
-        setValidating(false);
-        return;
-      }
-
-      const result = await validatePasswordResetToken(uid, token);
-      
-      if (result.success && result.valid) {
-        setIsValidToken(true);
-        setUserEmail(result.email);
-      } else {
-        setError(result.error || 'Invalid or expired password reset link');
-      }
-      
-      setValidating(false);
-    };
-
-    validateToken();
-  }, [uid, token]);
 
   const handleChange = (e) => {
     setFormData({
@@ -130,19 +88,19 @@ const ResetPassword = () => {
     }
 
     const result = await confirmPasswordReset(
-      uid, 
-      token, 
-      formData.new_password, 
+      formData.email,
+      formData.otp,
+      formData.new_password,
       formData.confirm_password
     );
-    
+
     if (result.success) {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -152,147 +110,6 @@ const ResetPassword = () => {
 
   function ShowPassword2() {
     setShowPasswordState2(!showPasswordState2);
-  }
-
-  if (validating) {
-    return (
-      <div
-        className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors flex items-center justify-center p-4 relative"
-      >
-        {/* Floating decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
-        </div>
-        <div className="relative w-full max-w-md">
-          <div
-            className="chef-card rounded-3xl p-8 shadow-2xl backdrop-blur-2xl text-center"
-          >
-            {/* Loading Icon */}
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#366c6b] to-[#244746] rounded-full mb-6 shadow-lg border-4 border-white">
-              <svg className="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </div>
-            <div
-              className="font-extrabold text-3xl sm:text-4xl mb-2 bg-clip-text text-transparent font-chef drop-shadow-lg tracking-wide"
-              style={{
-                letterSpacing: '0.04em',
-                lineHeight: '1.1',
-                backgroundImage: 'linear-gradient(90deg, #366c6b 0%, #1a3535 100%)',
-                textShadow: '0 2px 8px rgba(26,53,53,0.12)',
-              }}
-            >
-              Imhotep Finance
-            </div>
-            <p className="text-sm mb-2" style={{ color: '#1a3535', opacity: 0.8 }}>
-              Manage your finances efficiently with Imhotep Financial Manager
-            </p>
-            <h2 className="text-3xl font-bold font-chef text-gray-800 mb-4">
-              Validating Reset Link...
-            </h2>
-            <p className="text-gray-600 font-medium leading-relaxed">
-              Please wait while we securely validate your password reset link
-            </p>
-            <div className="mt-6">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
-              </div>
-              <p className="text-gray-500 text-sm mt-2">Verifying security token...</p>
-            </div>
-          </div>
-          <div className="text-center mt-8">
-            <p className="text-sm font-medium" style={{ color: '#1a3535', opacity: 0.8 }}>
-              📈 Imhotep Finance –  Manage your finances efficiently with Imhotep Financial Manager 📈
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isValidToken) {
-    return (
-      <div
-        className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors flex items-center justify-center p-4 relative"
-      >
-        {/* Floating decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-red-300 dark:bg-red-900/30"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-red-200 dark:bg-red-800/30" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-red-100 dark:bg-red-700/30" style={{animationDelay: '4s'}}></div>
-        </div>
-        <div className="relative w-full max-w-md">
-          <div
-            className="chef-card rounded-3xl p-8 shadow-2xl backdrop-blur-2xl text-center"
-          >
-            {/* Error Icon */}
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-500 rounded-full mb-6 shadow-lg">
-              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div
-              className="font-extrabold text-3xl sm:text-4xl mb-2 bg-clip-text text-transparent font-chef drop-shadow-lg tracking-wide"
-              style={{
-                letterSpacing: '0.04em',
-                lineHeight: '1.1',
-                backgroundImage: 'linear-gradient(90deg, #c44d4d 0%, #a82e2e 100%)',
-                textShadow: '0 2px 8px rgba(196,77,77,0.12)',
-              }}
-            >
-              Imhotep Finance
-            </div>
-            <p className="text-sm mb-2" style={{ color: '#a82e2e', opacity: 0.8 }}>
-              Manage your finances efficiently with Imhotep Financial Manager
-            </p>
-            <h2 className="text-3xl font-bold font-chef text-gray-800 mb-4">
-              Invalid Reset Link
-            </h2>
-            <p className="text-gray-600 font-medium mb-8 leading-relaxed">
-              {error}
-            </p>
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <div className="text-left">
-                  <p className="text-red-700 font-medium text-sm">Reset Link Expired</p>
-                  <p className="text-red-600 text-sm mt-1">
-                    This password reset link may have expired or been used already. Please request a new one.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Link
-              to="/forgot-password"
-              className="chef-button w-full mb-4"
-              style={{
-                background: 'linear-gradient(90deg, #c44d4d 0%, #a82e2e 100%)',
-                color: 'white',
-              }}
-            >
-              Request New Reset Link
-            </Link>
-            <Link
-              to="/login"
-              className="font-medium text-sm transition-colors duration-200"
-              style={{ color: '#a82e2e' }}
-            >
-              Back to Login
-            </Link>
-          </div>
-          <div className="text-center mt-8">
-            <p className="text-sm font-medium" style={{ color: '#a82e2e', opacity: 0.8 }}>
-              📈 Imhotep Finance –  Manage your finances efficiently with Imhotep Financial Manager 📈
-            </p>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   if (success) {
@@ -392,8 +209,8 @@ const ResetPassword = () => {
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
       </div>
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="relative w-full max-w-md">
@@ -428,8 +245,7 @@ const ResetPassword = () => {
                 Set New Password
               </h2>
               <p className="text-gray-600 font-medium">
-                Create a secure new password for{' '}
-                <span className="font-semibold" style={{ color: '#366c6b' }}>{userEmail}</span>
+                Create a secure new password
               </p>
             </div>
             {/* Error Alert */}
@@ -448,6 +264,54 @@ const ResetPassword = () => {
             )}
             {/* Reset Password Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Email Field */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="chef-input pl-10"
+                    placeholder="Enter your email"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* OTP Field */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">
+                  OTP Code
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="otp"
+                    value={formData.otp}
+                    onChange={handleChange}
+                    required
+                    maxLength={6}
+                    className="chef-input pl-10 text-center tracking-widest font-mono"
+                    placeholder="000000"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               {/* New Password Field */}
               <div>
                 <label className="block text-gray-700 font-semibold mb-2">
@@ -519,7 +383,7 @@ const ResetPassword = () => {
                     {showPasswordState2 ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
+                      </svg>
                     ) : (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -534,19 +398,17 @@ const ResetPassword = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Password Strength</span>
-                    <span className={`text-sm font-medium ${
-                      formData.new_password.length >= 12 ? 'text-green-600' :
-                      formData.new_password.length >= 8 ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
+                    <span className={`text-sm font-medium ${formData.new_password.length >= 12 ? 'text-green-600' :
+                        formData.new_password.length >= 8 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
                       {formData.new_password.length >= 12 ? 'Strong' :
                         formData.new_password.length >= 8 ? 'Medium' : 'Weak'}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className={`h-2 rounded-full transition-all duration-300 ${
-                      formData.new_password.length >= 12 ? 'bg-green-500 w-full' :
-                      formData.new_password.length >= 8 ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3'
-                    }`}></div>
+                    <div className={`h-2 rounded-full transition-all duration-300 ${formData.new_password.length >= 12 ? 'bg-green-500 w-full' :
+                        formData.new_password.length >= 8 ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3'
+                      }`}></div>
                   </div>
                 </div>
               )}

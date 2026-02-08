@@ -89,3 +89,23 @@ class VerifyEmailChangeRequestSerializer(serializers.Serializer):
     uid = serializers.CharField(help_text="Base64 encoded user ID")
     token = serializers.CharField(help_text="Email verification token")
     new_email = serializers.CharField(help_text="Base64 encoded new email address")
+
+class VerifyEmailChangeOTPRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="Current email address (to identify user)")
+    otp = serializers.CharField(max_length=6, min_length=6, help_text="6-digit OTP code")
+    new_email = serializers.EmailField(help_text="New email address to set")
+
+class VerifyAccountOTPRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="Email address")
+    otp = serializers.CharField(max_length=6, min_length=6, help_text="6-digit OTP code")
+
+class PasswordResetConfirmOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="Email address")
+    otp = serializers.CharField(max_length=6, min_length=6, help_text="6-digit OTP code")
+    new_password = serializers.CharField(write_only=True, min_length=8, help_text="New password")
+    confirm_password = serializers.CharField(write_only=True, min_length=8, help_text="Confirm new password")
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match")
+        return data
