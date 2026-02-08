@@ -92,9 +92,16 @@ const Login = () => {
       // If there's a next URL (from OAuth2 flow), redirect through session bridge
       navigate('/dashboard');
     } else {
-      setError(result.error);
-      if (result.info) {
-        setInfo(result.info);
+      if (result.isUnverified && result.email) {
+        setError(result.error);
+        setTimeout(() => {
+          navigate('/verify-otp', { state: { email: result.email } });
+        }, 1500);
+      } else {
+        setError(result.error);
+        if (result.info) {
+          setInfo(result.info);
+        }
       }
     }
 
