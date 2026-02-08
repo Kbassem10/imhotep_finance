@@ -13,9 +13,11 @@ const EmailVerification = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await axios.post('/api/auth/verify-email/', {
-          uid,
-          token,
+        const response = await axios.get('/api/auth/verify-email/', {
+          params: {
+            uid,
+            token,
+          },
         });
         setStatus('success');
         setMessage('Your email has been verified successfully!');

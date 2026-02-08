@@ -2,8 +2,9 @@ from django.core.exceptions import ValidationError
 from scheduled_trans_management.models import ScheduledTransaction
 from finance_management.utils.currencies import get_allowed_currencies
 from django.db import transaction
+from django.utils import timezone
 import calendar
-from datetime import date
+from datetime import date, datetime, time
 
 
 def create_scheduled_transaction(*, user, day_of_month, amount, currency, scheduled_trans_status, category, scheduled_trans_details):
@@ -178,8 +179,10 @@ def apply_scheduled_transactions(*, user):
                         # Successfully created transaction
                         applied_count += 1
                         
-                        # Update last_time_added to this applied date
-                        sched.last_time_added = trans_date
+                        # Update last_time_added to this applied date (timezone-aware)
+                        sched.last_time_added = timezone.make_aware(
+                            datetime.combine(trans_date, time.min)
+                        )
                         sched.save(update_fields=["last_time_added"])
                         
                     except ValidationError as e:

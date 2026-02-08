@@ -25,6 +25,7 @@ from user_reports.serializers import (
     RecalculateReportsResponseSerializer
 )
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from imhotep_finance.throttles import ReportGenerationRateThrottle
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ReportHistoryMonthsApi(APIView):
@@ -68,7 +69,8 @@ class ReportHistoryMonthsApi(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class MonthlyReportHistoryApi(APIView):
     permission_classes = [IsAuthenticated]
-    
+    throttle_classes = [ReportGenerationRateThrottle]
+
     @extend_schema(
         tags=['Reports'],
         parameters=[
@@ -173,6 +175,7 @@ class ReportHistoryYearsApi(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class YearlyReportApi(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ReportGenerationRateThrottle]
     
     @extend_schema(
         tags=['Reports'],
@@ -189,6 +192,7 @@ class YearlyReportApi(APIView):
             200: YearlyReportResponseSerializer,
             400: 'Invalid year',
             404: 'No reports for year',
+            429: 'Rate limit exceeded',
             500: 'Internal server error'
         },
         description='Get yearly aggregated report across available monthly reports.',

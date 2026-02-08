@@ -12,7 +12,9 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import EmailVerification from './pages/auth/EmailVerification'
 import GoogleCallback from './pages/auth/GoogleCallback'
+import VerifyOTP from './pages/auth/VerifyOTP'
 import Profile from './pages/profile/Profile'
+import VerifyEmailChangeOTP from './pages/profile/VerifyEmailChangeOTP'
 import EmailChangeVerification from './pages/profile/EmailChangeVerification'
 
 //main app
@@ -37,130 +39,146 @@ function App() {
       <AuthProvider>
         <Router>
           <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] transition-colors">
-          {/* Global PWA Components */}
-          <InstallPrompt />
-          <OfflineIndicator />
-          <UpdatePrompt />
-          
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <div>
-                  <LandingPage />
-                  <InstallButton className="fixed bottom-4 right-4 z-50" />
-                </div>
-              } 
-            />
-            <Route 
-              path="/login" 
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              } 
-            />
-            <Route 
-              path="/register" 
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              } 
-            />
-            <Route 
-              path="/forgot-password" 
-              element={
-                <PublicRoute>
-                  <ForgotPassword />
-                </PublicRoute>
-              } 
-            />
-            <Route 
-              path="/reset-password" 
-              element={
-                <PublicRoute>
-                  <ResetPassword />
-                </PublicRoute>
-              } 
-            />
-            <Route path="/verify-email/:uid/:token" element={<EmailVerification />} />
-            <Route path="/auth/google/callback" element={<GoogleCallback />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/verify-email-change/:uid/:token/:new_email" 
-              element={<EmailChangeVerification />} 
-            />
-            <Route 
-              path="/show_trans"
-              element={
-                <ProtectedRoute>
-                  <ShowTransactions />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/show_networth_details"
-              element={
-                <ProtectedRoute>
-                  <ShowNetWorthDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/wishlist" 
-              element={
-                <ProtectedRoute>
-                  <ShowWishlist />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/show_scheduled_trans"
-              element={
-                <ProtectedRoute>
-                  <ShowScheduledTransactions />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/show-target-history"
-              element={
-                <ProtectedRoute>
-                  <ShowTargetHistory />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/version-history" 
-              element={<Version />} 
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+            {/* Global PWA Components */}
+            <InstallPrompt />
+            <OfflineIndicator />
+            <UpdatePrompt />
+
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <div>
+                    <LandingPage />
+                    <InstallButton className="fixed bottom-4 right-4 z-50" />
+                  </div>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <PublicRoute>
+                    <ResetPassword />
+                  </PublicRoute>
+                }
+              />
+              <Route path="/verify-email/:uid/:token" element={<EmailVerification />} />
+              <Route
+                path="/verify-otp"
+                element={
+                  <PublicRoute>
+                    <VerifyOTP />
+                  </PublicRoute>
+                }
+              />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/verify-email-change/:uid/:token/:new_email"
+                element={<EmailChangeVerification />}
+              />
+              <Route
+                path="/verify-email-change-otp"
+                element={
+                  <ProtectedRoute>
+                    <VerifyEmailChangeOTP />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/show_trans"
+                element={
+                  <ProtectedRoute>
+                    <ShowTransactions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/show_networth_details"
+                element={
+                  <ProtectedRoute>
+                    <ShowNetWorthDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wishlist"
+                element={
+                  <ProtectedRoute>
+                    <ShowWishlist />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/show_scheduled_trans"
+                element={
+                  <ProtectedRoute>
+                    <ShowScheduledTransactions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/show-target-history"
+                element={
+                  <ProtectedRoute>
+                    <ShowTargetHistory />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/version-history"
+                element={<Version />}
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
         </Router>
       </AuthProvider>
     </ThemeProvider>

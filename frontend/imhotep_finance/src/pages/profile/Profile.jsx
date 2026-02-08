@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../../components/common/Footer';
 import { currencies } from '../../utils/currencies';
@@ -19,6 +19,8 @@ const Profile = () => {
     username: '',
     email: '',
   });
+
+  const navigate = useNavigate();
 
   // Password form data
   const [passwordData, setPasswordData] = useState({
@@ -150,17 +152,33 @@ const Profile = () => {
     setSuccess('');
 
     try {
+      // Check if email is being changed
+      const emailChanged = profileData.email !== user.email;
+
       const response = await axios.put('/api/profile/update/', profileData);
       setSuccess(response.data.message);
-      
+
       // Update user context with new data
       if (response.data.user) {
         updateUser(response.data.user);
       }
+
+      // If email was changed, redirect to verification page
+      if (emailChanged) {
+        setTimeout(() => {
+          navigate('/verify-email-change-otp', {
+            state: {
+              email: user.email,
+              new_email: profileData.email
+            }
+          });
+        }, 1500);
+      }
+
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to update profile');
     }
-    
+
     setLoading(false);
   };
 
@@ -187,7 +205,7 @@ const Profile = () => {
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to change password');
     }
-    
+
     setLoading(false);
   };
 
@@ -214,7 +232,7 @@ const Profile = () => {
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to update favorite currency');
     }
-    
+
     setLoading(false);
   };
 
@@ -236,7 +254,7 @@ const Profile = () => {
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to update target');
     }
-    
+
     setLoading(false);
   };
 
@@ -253,8 +271,8 @@ const Profile = () => {
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
       </div>
       {/* Floating decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -297,8 +315,8 @@ const Profile = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link 
-                to="/dashboard" 
+              <Link
+                to="/dashboard"
                 className="chef-button bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white flex items-center space-x-2 justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,8 +324,8 @@ const Profile = () => {
                 </svg>
                 <span>Back to Dashboard</span>
               </Link>
-              <button 
-                onClick={logout} 
+              <button
+                onClick={logout}
                 className="chef-button bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white flex items-center space-x-2 justify-center"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,11 +343,10 @@ const Profile = () => {
         >
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <button
-              className={`chef-button flex-1 ${
-                activeTab === 'profile'
-                  ? 'bg-gradient-to-r from-[#366c6b] to-[#1a3535] text-white shadow-lg scale-105'
-                  : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
-              } flex items-center space-x-2 justify-center transition-all duration-200`}
+              className={`chef-button flex-1 ${activeTab === 'profile'
+                ? 'bg-gradient-to-r from-[#366c6b] to-[#1a3535] text-white shadow-lg scale-105'
+                : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
+                } flex items-center space-x-2 justify-center transition-all duration-200`}
               onClick={() => setActiveTab('profile')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,11 +355,10 @@ const Profile = () => {
               <span>Profile Information</span>
             </button>
             <button
-              className={`chef-button flex-1 ${
-                activeTab === 'password'
-                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
-                  : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
-              } flex items-center space-x-2 justify-center transition-all duration-200`}
+              className={`chef-button flex-1 ${activeTab === 'password'
+                ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
+                : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
+                } flex items-center space-x-2 justify-center transition-all duration-200`}
               onClick={() => setActiveTab('password')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,11 +367,10 @@ const Profile = () => {
               <span>Change Password</span>
             </button>
             <button
-              className={`chef-button flex-1 ${
-                activeTab === 'currency'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
-                  : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
-              } flex items-center space-x-2 justify-center transition-all duration-200`}
+              className={`chef-button flex-1 ${activeTab === 'currency'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
+                : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
+                } flex items-center space-x-2 justify-center transition-all duration-200`}
               onClick={() => setActiveTab('currency')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,11 +379,10 @@ const Profile = () => {
               <span>Change Currency</span>
             </button>
             <button
-              className={`chef-button flex-1 ${
-                activeTab === 'target'
-                  ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg scale-105'
-                  : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
-              } flex items-center space-x-2 justify-center transition-all duration-200`}
+              className={`chef-button flex-1 ${activeTab === 'target'
+                ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg scale-105'
+                : 'bg-gradient-to-r from-[#eaf6f6] to-[#d6efee] text-[#366c6b] hover:bg-[#d6efee] border border-[#366c6b]/30'
+                } flex items-center space-x-2 justify-center transition-all duration-200`}
               onClick={() => setActiveTab('target')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,7 +444,7 @@ const Profile = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                      </svg>
                     </div>
                     <input
                       type="text"
@@ -451,7 +465,7 @@ const Profile = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                      </svg>
                     </div>
                     <input
                       type="text"
@@ -523,11 +537,10 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`chef-button w-full ${
-                    loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'text-white'
-                  } flex items-center space-x-2 justify-center`}
+                  className={`chef-button w-full ${loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'text-white'
+                    } flex items-center space-x-2 justify-center`}
                   style={
                     loading
                       ? {}
@@ -582,7 +595,7 @@ const Profile = () => {
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+                  </svg>
                   <span className="text-green-700 font-medium">{success}</span>
                 </div>
               </div>
@@ -713,7 +726,7 @@ const Profile = () => {
                   className={`chef-button w-full ${loading
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'text-white'
-                  } flex items-center space-x-2 justify-center`}
+                    } flex items-center space-x-2 justify-center`}
                   style={
                     loading
                       ? {}
@@ -801,10 +814,10 @@ const Profile = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`chef-button w-full ${loading 
-                    ? 'bg-gray-400 cursor-not-allowed' 
+                  className={`chef-button w-full ${loading
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : 'text-white'
-                  } flex items-center space-x-2 justify-center`}
+                    } flex items-center space-x-2 justify-center`}
                   style={
                     loading
                       ? {}
@@ -878,7 +891,7 @@ const Profile = () => {
                   className={`chef-button w-full ${loading
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'text-white'
-                  } flex items-center space-x-2 justify-center`}
+                    } flex items-center space-x-2 justify-center`}
                   style={
                     loading
                       ? {}

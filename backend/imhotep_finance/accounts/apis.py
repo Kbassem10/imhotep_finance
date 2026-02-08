@@ -12,9 +12,13 @@ from accounts.services import (
     demo_login,
     register_user,
     verify_email,
+    verify_account_otp,
+    verify_email_change,
+    verify_email_change_otp,
     logout_user,
     request_password_reset,
     confirm_password_reset,
+    confirm_password_reset_otp,
     validate_password_reset_token,
     get_google_oauth_url,
     authenticate_with_google,
@@ -36,7 +40,10 @@ from accounts.serializers import (
     GoogleAuthResponseSerializer,
     UpdateProfileRequestSerializer,
     ChangePasswordRequestSerializer,
-    VerifyEmailChangeRequestSerializer
+    VerifyEmailChangeRequestSerializer,
+    VerifyEmailChangeOTPRequestSerializer,
+    VerifyAccountOTPRequestSerializer,
+    PasswordResetConfirmOTPSerializer
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -47,6 +54,13 @@ from django.contrib.auth import get_user_model, login as django_login
 from urllib.parse import unquote
 
 User = get_user_model()
+
+from imhotep_finance.throttles import (
+    LoginRateThrottle,
+    RegistrationRateThrottle,
+    PasswordResetRateThrottle,
+    AuthenticationRateThrottle
+)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserViewApi(APIView):
@@ -137,12 +151,13 @@ class UpdateUserLastLoginApi(APIView):
 
 class LoginApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Authenticate using username or email and password.",
         request=LoginRequestSerializer,
-        responses={200: LoginResponseSerializer, 400: 'Invalid credentials', 401: 'Unauthorized'},
+        responses={200: LoginResponseSerializer, 400: 'Invalid credentials', 401: 'Unauthorized', 429: 'Rate limit exceeded'},
         operation_id='login'
     )
     def post(self, request):
@@ -226,12 +241,13 @@ class DemoLoginApi(APIView):
 
 class RegisterApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [RegistrationRateThrottle]
     
     @extend_schema(
         tags=['Authentication'],
         description="Register a new user.",
         request=RegisterRequestSerializer,
-        responses={201: 'User created successfully', 400: 'Validation error'},
+        responses={201: 'User created successfully', 400: 'Validation error', 429: 'Rate limit exceeded'},
         operation_id='register'
     )
     def post(self, request):
@@ -261,6 +277,38 @@ class RegisterApi(APIView):
             {'message': f'User created successfully. {mail_status}.'}, 
             status=status.HTTP_201_CREATED
         )
+
+class VerifyAccountOTPApi(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthenticationRateThrottle]
+
+    @extend_schema(
+        tags=['Authentication'],
+        description="Verify user account using OTP.",
+        request=VerifyAccountOTPRequestSerializer,
+        responses={200: 'Account verified successfully', 400: 'Invalid OTP or User not found'},
+        operation_id='verify_account_otp'
+    )
+    def post(self, request):
+        """Verify user account using OTP"""
+        serializer = VerifyAccountOTPRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
+
+        success, message = verify_account_otp(email, otp)
+        
+        if success:
+            return Response(
+                {'message': message}, 
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {'error': message}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
 class VerifyEmailApi(APIView):
     permission_classes = [AllowAny]
@@ -346,12 +394,13 @@ class LogoutApi(APIView):
 
 class PasswordResetRequestApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [PasswordResetRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Request a password reset email to be sent.",
         request=PasswordResetRequestSerializer,
-        responses={200: {'description': 'Password reset email sent'}, 400: {'description': 'Invalid email'}},
+        responses={200: {'description': 'Password reset email sent'}, 400: {'description': 'Invalid email'}, 429: 'Rate limit exceeded'},
         operation_id='password_reset_request'
     )
     def post(self, request):
@@ -373,26 +422,26 @@ class PasswordResetRequestApi(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class PasswordResetConfirmApi(APIView):
+class PasswordResetConfirmOTPApi(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
         tags=['Authentication'],
-        description="Confirm password reset with uid/token and new password.",
-        request=PasswordResetConfirmSerializer,
+        description="Confirm password reset with OTP and new password.",
+        request=PasswordResetConfirmOTPSerializer,
         responses={200: {'description': 'Password reset successful'}, 400: {'description': 'Validation error'}},
-        operation_id='password_reset_confirm'
+        operation_id='password_reset_confirm_otp'
     )
     def post(self, request):
-        """Confirm password reset with new password"""
-        serializer = PasswordResetConfirmSerializer(data=request.data)
+        """Confirm password reset with OTP and new password"""
+        serializer = PasswordResetConfirmOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        uid = serializer.validated_data['uid']
-        token = serializer.validated_data['token']
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
         new_password = serializer.validated_data['new_password']
 
-        success, message = confirm_password_reset(uid, token, new_password)
+        success, message = confirm_password_reset_otp(email, otp, new_password)
 
         if success:
             return Response(
@@ -438,11 +487,12 @@ class PasswordResetValidateApi(APIView):
 
 class GoogleLoginUrlApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthenticationRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Get Google OAuth2 login URL for frontend.",
-        responses={200: {'type': 'object', 'properties': {'auth_url': {'type': 'string'}}}},
+        responses={200: {'type': 'object', 'properties': {'auth_url': {'type': 'string'}}}, 429: 'Rate limit exceeded'},
         operation_id='get_google_login_url'
     )
     def get(self, request):
@@ -452,12 +502,13 @@ class GoogleLoginUrlApi(APIView):
 
 class GoogleAuthApi(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthenticationRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
         description="Authenticate with Google OAuth2 authorization code.",
         request=GoogleAuthRequestSerializer,
-        responses={200: GoogleAuthResponseSerializer, 400: {'description': 'Invalid code'}},
+        responses={200: GoogleAuthResponseSerializer, 400: {'description': 'Invalid code'}, 429: 'Rate limit exceeded'},
         operation_id='google_authenticate'
     )
     def post(self, request):
@@ -606,6 +657,38 @@ class VerifyEmailChangeApi(APIView):
         success, message = verify_email_change(
             serializer.validated_data['uid'],
             serializer.validated_data['token'],
+            serializer.validated_data['new_email']
+        )
+
+        if success:
+            return Response(
+                {'message': message}, 
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {'error': message}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class VerifyEmailChangeOTPApi(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        tags=['User Profile'],
+        description="Verify email change using OTP.",
+        request=VerifyEmailChangeOTPRequestSerializer,
+        responses={200: {'description': 'Email updated successfully'}, 400: {'description': 'Invalid OTP'}},
+        operation_id='verify_email_change_otp'
+    )
+    def post(self, request):
+        """Verify email change using OTP"""
+        serializer = VerifyEmailChangeOTPRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        success, message = verify_email_change_otp(
+            serializer.validated_data['email'],
+            serializer.validated_data['otp'],
             serializer.validated_data['new_email']
         )
 
