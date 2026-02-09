@@ -22,6 +22,7 @@ const MAPPING = {
   'list.bullet': 'list',
   'person.fill': 'person',
   'repeat': 'repeat',
+  'star.fill': 'star',
 } as IconMapping;
 
 /**
