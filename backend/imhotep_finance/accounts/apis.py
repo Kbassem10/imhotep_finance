@@ -177,7 +177,11 @@ class LoginApi(APIView):
         
         if user and message != 'Login successful':
             return Response(
-                {'error': message}, 
+                {
+                    'error': message, 
+                    'email': user.email,
+                    'code': 'email_not_verified'
+                }, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
