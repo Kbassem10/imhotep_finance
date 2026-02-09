@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import api from '../constants/api'; // Use the configured api instance
 import { Ionicons } from '@expo/vector-icons';
 
@@ -39,14 +40,41 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange, status
         c.toLowerCase().includes(search.toLowerCase())
     );
 
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const themeStyles = {
+        selector: {
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+            borderColor: isDark ? '#475569' : '#ddd',
+        },
+        text: {
+            color: isDark ? '#f1f5f9' : '#333',
+        },
+        modalContent: {
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+        },
+        searchInput: {
+            backgroundColor: isDark ? '#334155' : '#f5f5f5',
+            color: isDark ? '#f1f5f9' : '#333',
+        },
+        item: {
+            borderBottomColor: isDark ? '#334155' : '#f0f0f0',
+        },
+        closeIcon: isDark ? '#fff' : '#333',
+        emptyText: {
+            color: isDark ? '#94a3b8' : '#999',
+        }
+    };
+
     return (
         <View>
             <TouchableOpacity
-                style={styles.selector}
+                style={[styles.selector, themeStyles.selector]}
                 onPress={() => setModalVisible(true)}
             >
-                <Text style={styles.selectorText}>{value || 'Select Category'}</Text>
-                <Ionicons name="chevron-down" size={20} color="#666" />
+                <Text style={[styles.selectorText, themeStyles.text]}>{value || 'Select Category'}</Text>
+                <Ionicons name="chevron-down" size={20} color={isDark ? '#94a3b8' : '#666'} />
             </TouchableOpacity>
 
             <Modal
@@ -56,18 +84,18 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange, status
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, themeStyles.modalContent]}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Category</Text>
+                            <Text style={[styles.modalTitle, themeStyles.text]}>Select Category</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
+                                <Ionicons name="close" size={24} color={themeStyles.closeIcon} />
                             </TouchableOpacity>
                         </View>
 
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, themeStyles.searchInput]}
                             placeholder="Search or add new..."
-                            placeholderTextColor="#999"
+                            placeholderTextColor={isDark ? '#94a3b8' : '#999'}
                             value={search}
                             onChangeText={setSearch}
                         />
@@ -80,20 +108,20 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange, status
                                 keyExtractor={(item, index) => item + index}
                                 renderItem={({ item }) => (
                                     <TouchableOpacity
-                                        style={[styles.item, item === value && styles.selectedItem]}
+                                        style={[styles.item, themeStyles.item, item === value && styles.selectedItem]}
                                         onPress={() => {
                                             onChange(item);
                                             setModalVisible(false);
                                             setSearch('');
                                         }}
                                     >
-                                        <Text style={[styles.itemText, item === value && styles.selectedItemText]}>{item}</Text>
+                                        <Text style={[styles.itemText, themeStyles.text, item === value && styles.selectedItemText]}>{item}</Text>
                                         {item === value && <Ionicons name="checkmark" size={20} color="#fff" />}
                                     </TouchableOpacity>
                                 )}
                                 ListEmptyComponent={
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>No existing categories found.</Text>
+                                        <Text style={[styles.emptyText, themeStyles.emptyText]}>No existing categories found.</Text>
                                         {search.length > 0 && (
                                             <TouchableOpacity
                                                 style={styles.addNewButton}

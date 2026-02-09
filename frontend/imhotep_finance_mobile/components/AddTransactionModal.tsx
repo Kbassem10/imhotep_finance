@@ -12,6 +12,7 @@ import {
     Alert,
     ActivityIndicator
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../constants/api';
@@ -104,6 +105,31 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     };
 
 
+
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const themeStyles = {
+        container: {
+            backgroundColor: isDark ? '#1e293b' : 'white',
+        },
+        text: {
+            color: isDark ? '#f1f5f9' : '#333',
+        },
+        subText: {
+            color: isDark ? '#94a3b8' : '#666',
+        },
+        input: {
+            backgroundColor: isDark ? '#334155' : '#f9f9f9',
+            color: isDark ? '#f1f5f9' : '#000',
+            borderColor: isDark ? '#475569' : '#eee',
+        },
+        typeButton: {
+            backgroundColor: isDark ? '#334155' : '#f5f5f5',
+        },
+        closeIcon: isDark ? '#fff' : '#333'
+    };
+
     return (
         <Modal
             visible={visible}
@@ -115,49 +141,50 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.container}
             >
-                <View style={styles.modalView}>
+                <View style={[styles.modalView, themeStyles.container]}>
                     <View style={styles.header}>
-                        <Text style={styles.title}>{editMode ? 'Edit Transaction' : 'Add Transaction'}</Text>
+                        <Text style={[styles.title, themeStyles.text]}>{editMode ? 'Edit Transaction' : 'Add Transaction'}</Text>
                         <TouchableOpacity onPress={onClose}>
-                            <Ionicons name="close" size={24} color="#333" />
+                            <Ionicons name="close" size={24} color={themeStyles.closeIcon} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView contentContainerStyle={styles.form}>
                         {/* Type Selector */}
-                        <View style={styles.typeContainer}>
+                        <View style={[styles.typeContainer, themeStyles.typeButton]}>
                             <TouchableOpacity
                                 style={[
                                     styles.typeButton,
-                                    status === 'deposit' && styles.typeButtonIncome
+                                    status === 'deposit' && (isDark ? { backgroundColor: 'rgba(16, 185, 129, 0.2)' } : styles.typeButtonIncome)
                                 ]}
                                 onPress={() => setStatus('deposit')}
                             >
-                                <Text style={[styles.typeText, status === 'deposit' && styles.typeTextActive]}>Income</Text>
+                                <Text style={[styles.typeText, themeStyles.subText, status === 'deposit' && (isDark ? { color: '#10b981' } : styles.typeTextActive)]}>Income</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[
                                     styles.typeButton,
-                                    status === 'withdraw' && styles.typeButtonExpense
+                                    status === 'withdraw' && (isDark ? { backgroundColor: 'rgba(239, 68, 68, 0.2)' } : styles.typeButtonExpense)
                                 ]}
                                 onPress={() => setStatus('withdraw')}
                             >
-                                <Text style={[styles.typeText, status === 'withdraw' && styles.typeTextActive]}>Expense</Text>
+                                <Text style={[styles.typeText, themeStyles.subText, status === 'withdraw' && (isDark ? { color: '#ef4444' } : styles.typeTextActive)]}>Expense</Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Amount */}
-                        <Text style={styles.label}>Amount</Text>
+                        <Text style={[styles.label, themeStyles.subText]}>Amount</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, themeStyles.input]}
                             placeholder="0.00"
+                            placeholderTextColor={isDark ? '#94a3b8' : '#aaa'}
                             keyboardType="numeric"
                             value={amount}
                             onChangeText={setAmount}
                         />
 
                         {/* Currency */}
-                        <Text style={styles.label}>Currency</Text>
+                        <Text style={[styles.label, themeStyles.subText]}>Currency</Text>
                         <CurrencySelect
                             value={currency}
                             onChange={setCurrency}
@@ -165,7 +192,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                         />
 
                         {/* Category */}
-                        <Text style={styles.label}>Category</Text>
+                        <Text style={[styles.label, themeStyles.subText]}>Category</Text>
                         <CategorySelect
                             value={category}
                             onChange={setCategory}
@@ -173,22 +200,23 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                         />
 
                         {/* Description */}
-                        <Text style={styles.label}>Description</Text>
+                        <Text style={[styles.label, themeStyles.subText]}>Description</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, themeStyles.input]}
                             placeholder="Description (optional)"
+                            placeholderTextColor={isDark ? '#94a3b8' : '#aaa'}
                             value={desc}
                             onChangeText={setDesc}
                         />
 
                         {/* Date */}
-                        <Text style={styles.label}>Date</Text>
+                        <Text style={[styles.label, themeStyles.subText]}>Date</Text>
                         <TouchableOpacity
-                            style={styles.dateButton}
+                            style={[styles.dateButton, themeStyles.input]}
                             onPress={() => setShowDatePicker(true)}
                         >
-                            <Text style={styles.dateText}>{date.toISOString().split('T')[0]}</Text>
-                            <Ionicons name="calendar-outline" size={20} color="#666" />
+                            <Text style={[styles.dateText, themeStyles.text]}>{date.toISOString().split('T')[0]}</Text>
+                            <Ionicons name="calendar-outline" size={20} color={isDark ? '#94a3b8' : '#666'} />
                         </TouchableOpacity>
 
                         {showDatePicker && (
@@ -197,6 +225,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                                 mode="date"
                                 display="default"
                                 onChange={onDateChange}
+                                themeVariant={isDark ? 'dark' : 'light'}
                             />
                         )}
 

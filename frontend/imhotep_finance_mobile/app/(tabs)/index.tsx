@@ -11,6 +11,7 @@ import {
   Platform,
   Alert
 } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 import NetWorthCard from '@/components/NetWorthCard';
 import AddTransactionModal from '@/components/AddTransactionModal';
@@ -118,31 +119,54 @@ export default function Dashboard() {
 
   const scoreColors = getScoreColor();
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const themeStyles = {
+    container: {
+      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+    },
+    text: {
+      color: isDark ? '#f1f5f9' : '#1e293b',
+    },
+    subText: {
+      color: isDark ? '#94a3b8' : '#64748b',
+    },
+    card: {
+      backgroundColor: isDark ? '#1e293b' : 'white',
+    },
+    headerCard: {
+      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255,255,255,0.8)',
+    },
+    iconBg: {
+      backgroundColor: isDark ? '#334155' : '#eaf6f6'
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Background Decorative Elements - Simulated with simple Views as specific blurs are heavy on RN without Expo Blur */}
-      <View style={[styles.orb, { top: 50, left: -50, backgroundColor: 'rgba(54, 108, 107, 0.2)' }]} />
-      <View style={[styles.orb, { top: 100, right: -50, backgroundColor: 'rgba(54, 108, 107, 0.2)' }]} />
+    <View style={[styles.container, themeStyles.container]}>
+      {/* Background Decorative Elements */}
+      <View style={[styles.orb, { top: 50, left: -50, backgroundColor: isDark ? 'rgba(54, 108, 107, 0.1)' : 'rgba(54, 108, 107, 0.2)' }]} />
+      <View style={[styles.orb, { top: 100, right: -50, backgroundColor: isDark ? 'rgba(54, 108, 107, 0.1)' : 'rgba(54, 108, 107, 0.2)' }]} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#366c6b" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? "#fff" : "#366c6b"} />
         }
       >
         {/* Header */}
-        <View style={styles.headerCard}>
+        <View style={[styles.headerCard, themeStyles.headerCard]}>
           <View style={styles.headerRow}>
             <View style={styles.logoContainer}>
-              {/* <Image source={Logo} style={styles.logo} resizeMode="contain" /> */}
               <Ionicons name="pie-chart" size={30} color="#fff" />
             </View>
             <View>
-              <Text style={styles.brandName}>Imhotep Finance</Text>
-              <Text style={styles.brandSubtitle}>Manage your finances</Text>
+              <Text style={[styles.brandName, { color: '#366c6b' }]}>Imhotep Finance</Text>
+              <Text style={[styles.brandSubtitle, themeStyles.subText]}>Manage your finances</Text>
             </View>
           </View>
-          <Text style={styles.welcomeText}>Welcome, {user?.first_name || user?.username}!</Text>
+          <Text style={[styles.welcomeText, themeStyles.text]}>Welcome, {user?.first_name || user?.username}!</Text>
         </View>
 
         {/* Net Worth */}
@@ -155,34 +179,18 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <View style={styles.actionsGrid}>
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => {
-              setInitialType('deposit');
-              setShowAddModal(true);
-            }}
-          >
-            <View style={[styles.iconCircle, { backgroundColor: '#d1fae5' }]}>
-              <Ionicons name="arrow-up" size={24} color="#059669" />
-            </View>
-            <View>
-              <Text style={styles.actionTitle}>Add Income</Text>
-              <Text style={styles.actionSubtitle}>Record earnings</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
+            style={[styles.actionButton, themeStyles.card]}
             onPress={() => {
               setInitialType('withdraw');
               setShowAddModal(true);
             }}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#fee2e2' }]}>
-              <Ionicons name="arrow-down" size={24} color="#dc2626" />
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(54, 108, 107, 0.2)' : '#e0f2f1' }]}>
+              <Ionicons name="add-circle" size={32} color="#366c6b" />
             </View>
             <View>
-              <Text style={styles.actionTitle}>Add Expense</Text>
-              <Text style={styles.actionSubtitle}>Track spending</Text>
+              <Text style={[styles.actionTitle, themeStyles.text]}>Add Transaction</Text>
+              <Text style={[styles.actionSubtitle, themeStyles.subText]}>Record income or expense</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -220,12 +228,12 @@ export default function Dashboard() {
             </View>
           </LinearGradient>
         ) : (
-          <View style={styles.getStartedCard}>
-            <View style={styles.getStartedIcon}>
+          <View style={[styles.getStartedCard, themeStyles.card]}>
+            <View style={[styles.getStartedIcon, themeStyles.iconBg]}>
               <Ionicons name="rocket-outline" size={32} color="#366c6b" />
             </View>
-            <Text style={styles.getStartedTitle}>Get Started</Text>
-            <Text style={styles.getStartedText}>Set a monthly target in your profile to track your progress.</Text>
+            <Text style={[styles.getStartedTitle, themeStyles.text]}>Get Started</Text>
+            <Text style={[styles.getStartedText, themeStyles.subText]}>Set a monthly target in your profile to track your progress.</Text>
             <TouchableOpacity
               style={styles.getStartedButton}
               onPress={() => router.push('/profile')}
@@ -237,11 +245,11 @@ export default function Dashboard() {
 
         {/* Quick Links Grid */}
         <View style={styles.linksGrid}>
-          <QuickLink icon="list" title="Transactions" subtitle="View All" color="blue" href="/show_trans" />
-          <QuickLink icon="calendar" title="Scheduled" subtitle="Recurring" color="indigo" href="/show_scheduled_trans" />
-          <QuickLink icon="pie-chart" title="Net Worth" subtitle="Details" color="purple" href="/show_networth_details" />
-          <QuickLink icon="bar-chart" title="Reports" subtitle="Analysis" color="emerald" href="/reports" />
-          <QuickLink icon="person" title="Manage Target" subtitle="Goals" color="green" href="/profile" />
+          <QuickLink icon="list" title="Transactions" subtitle="View All" color="blue" href="/show_trans" isDark={isDark} />
+          <QuickLink icon="calendar" title="Scheduled" subtitle="Recurring" color="indigo" href="/show_scheduled_trans" isDark={isDark} />
+          <QuickLink icon="pie-chart" title="Net Worth" subtitle="Details" color="purple" href="/show_networth_details" isDark={isDark} />
+          <QuickLink icon="bar-chart" title="Reports" subtitle="Analysis" color="emerald" href="/reports" isDark={isDark} />
+          <QuickLink icon="person" title="Manage Target" subtitle="Goals" color="green" href="/profile" isDark={isDark} />
         </View>
 
         <View style={{ height: 100 }} />
@@ -261,7 +269,7 @@ export default function Dashboard() {
   );
 }
 
-const QuickLink = ({ icon, title, subtitle, color, href }: any) => {
+const QuickLink = ({ icon, title, subtitle, color, href, isDark }: any) => {
   // Mapping colors to hex
   const colorMap: any = {
     blue: '#2563eb',
@@ -271,16 +279,16 @@ const QuickLink = ({ icon, title, subtitle, color, href }: any) => {
     green: '#16a34a'
   };
   const bgMap: any = {
-    blue: '#dbeafe',
-    indigo: '#e0e7ff',
-    purple: '#f3e8ff',
-    emerald: '#d1fae5',
-    green: '#dcfce7'
+    blue: isDark ? 'rgba(37, 99, 235, 0.2)' : '#dbeafe',
+    indigo: isDark ? 'rgba(79, 70, 229, 0.2)' : '#e0e7ff',
+    purple: isDark ? 'rgba(147, 51, 234, 0.2)' : '#f3e8ff',
+    emerald: isDark ? 'rgba(5, 150, 105, 0.2)' : '#d1fae5',
+    green: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7'
   };
 
   return (
     <TouchableOpacity
-      style={styles.linkCard}
+      style={[styles.linkCard, { backgroundColor: isDark ? '#1e293b' : 'white' }]}
       onPress={() => {
         // Check if route exists or just navigate to profile for now if unsure
         // In a real app we would ensure these routes exist.
@@ -296,8 +304,8 @@ const QuickLink = ({ icon, title, subtitle, color, href }: any) => {
       <View style={[styles.linkIcon, { backgroundColor: bgMap[color] }]}>
         <Ionicons name={icon} size={24} color={colorMap[color]} />
       </View>
-      <Text style={styles.linkTitle}>{title}</Text>
-      <Text style={styles.linkSubtitle}>{subtitle}</Text>
+      <Text style={[styles.linkTitle, { color: isDark ? '#f1f5f9' : '#1e293b' }]}>{title}</Text>
+      <Text style={[styles.linkSubtitle, { color: isDark ? '#94a3b8' : '#64748b' }]}>{subtitle}</Text>
     </TouchableOpacity>
   );
 };
@@ -306,7 +314,7 @@ const QuickLink = ({ icon, title, subtitle, color, href }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    // Background color handled dynamically
   },
   scrollContent: {
     padding: 16,
@@ -320,7 +328,7 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   headerCard: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    // Background color handled dynamically
     borderRadius: 24,
     padding: 20,
     marginBottom: 20,
@@ -347,16 +355,16 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#366c6b',
+    // Color handled dynamically or fixed
   },
   brandSubtitle: {
     fontSize: 12,
-    color: '#666',
+    // Color handled dynamically
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
+    // Color handled dynamically
   },
   actionsGrid: {
     flexDirection: 'row',
@@ -365,7 +373,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: 'white',
+    // Background color handled dynamically
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -387,11 +395,11 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    // Color handled dynamically
   },
   actionSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    // Color handled dynamically
   },
   scoreCard: {
     borderRadius: 20,
@@ -440,7 +448,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   getStartedCard: {
-    backgroundColor: 'white',
+    // Background color handled dynamically
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
@@ -448,7 +456,7 @@ const styles = StyleSheet.create({
   getStartedIcon: {
     width: 64,
     height: 64,
-    backgroundColor: '#eaf6f6',
+    // Background color handled dynamically
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
@@ -457,12 +465,12 @@ const styles = StyleSheet.create({
   getStartedTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    // Color handled dynamically
     marginBottom: 8,
   },
   getStartedText: {
     textAlign: 'center',
-    color: '#64748b',
+    // Color handled dynamically
     marginBottom: 20,
   },
   getStartedButton: {
@@ -482,7 +490,7 @@ const styles = StyleSheet.create({
   },
   linkCard: {
     width: (width - 48) / 2, // 2 columns with gaps
-    backgroundColor: 'white',
+    // Background color handled dynamically
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -503,10 +511,10 @@ const styles = StyleSheet.create({
   linkTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    // Color handled dynamically
   },
   linkSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    // Color handled dynamically
   },
 });

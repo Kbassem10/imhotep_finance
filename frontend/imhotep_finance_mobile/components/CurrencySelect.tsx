@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../constants/api'; // Use the configured api instance
-
-// Hardcoded list of common currencies to avoid needing a separate file, 
-// or I could fetch from an API or just use a standard list.
-// For now, I'll use a small list or try to import if available, but since I can't easily import from web utils, I'll define a few common ones.
-const COMMON_CURRENCIES = [
-    'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD',
-    'MXN', 'SGD', 'HKD', 'NOK', 'KRW', 'TRY', 'RUB', 'INR', 'BRL', 'ZAR', 'EGP'
-];
+import { currencies } from '../constants/currencies';
 
 interface CurrencySelectProps {
     value: string;
@@ -24,7 +17,7 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({ value, onChange, requir
     const [favoriteCurrency, setFavoriteCurrency] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const filtered = COMMON_CURRENCIES.filter(c =>
+    const filtered = currencies.filter(c =>
         c.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -50,14 +43,38 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({ value, onChange, requir
         return () => { mounted = false; };
     }, []);
 
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const themeStyles = {
+        selector: {
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+            borderColor: isDark ? '#475569' : '#ddd',
+        },
+        text: {
+            color: isDark ? '#f1f5f9' : '#333',
+        },
+        modalContent: {
+            backgroundColor: isDark ? '#1e293b' : '#fff',
+        },
+        searchInput: {
+            backgroundColor: isDark ? '#334155' : '#f5f5f5',
+            color: isDark ? '#f1f5f9' : '#333',
+        },
+        item: {
+            borderBottomColor: isDark ? '#334155' : '#f0f0f0',
+        },
+        closeIcon: isDark ? '#fff' : '#333'
+    };
+
     return (
         <View>
             <TouchableOpacity
-                style={styles.selector}
+                style={[styles.selector, themeStyles.selector]}
                 onPress={() => setModalVisible(true)}
             >
-                <Text style={styles.selectorText}>{value || 'Select Currency'}</Text>
-                <Ionicons name="chevron-down" size={20} color="#666" />
+                <Text style={[styles.selectorText, themeStyles.text]}>{value || 'Select Currency'}</Text>
+                <Ionicons name="chevron-down" size={20} color={isDark ? '#94a3b8' : '#666'} />
             </TouchableOpacity>
 
             <Modal
@@ -67,18 +84,18 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({ value, onChange, requir
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, themeStyles.modalContent]}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Currency</Text>
+                            <Text style={[styles.modalTitle, themeStyles.text]}>Select Currency</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
+                                <Ionicons name="close" size={24} color={themeStyles.closeIcon} />
                             </TouchableOpacity>
                         </View>
 
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, themeStyles.searchInput]}
                             placeholder="Search currency..."
-                            placeholderTextColor="#999"
+                            placeholderTextColor={isDark ? '#94a3b8' : '#999'}
                             value={search}
                             onChangeText={setSearch}
                         />
@@ -88,14 +105,14 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({ value, onChange, requir
                             keyExtractor={(item) => item}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
-                                    style={[styles.item, item === value && styles.selectedItem]}
+                                    style={[styles.item, themeStyles.item, item === value && styles.selectedItem]}
                                     onPress={() => {
                                         onChange(item);
                                         setModalVisible(false);
                                         setSearch('');
                                     }}
                                 >
-                                    <Text style={[styles.itemText, item === value && styles.selectedItemText]}>{item}</Text>
+                                    <Text style={[styles.itemText, themeStyles.text, item === value && styles.selectedItemText]}>{item}</Text>
                                     {item === value && <Ionicons name="checkmark" size={20} color="#fff" />}
                                 </TouchableOpacity>
                             )}
