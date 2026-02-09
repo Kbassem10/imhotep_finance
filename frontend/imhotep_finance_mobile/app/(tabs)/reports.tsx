@@ -32,7 +32,7 @@ const CustomSelector = ({ visible, options, onSelect, onClose, title, selectedVa
                         <Ionicons name="close" size={24} color={isDark ? '#94a3b8' : '#64748b'} />
                     </TouchableOpacity>
                 </View>
-                <ScrollView style={{ maxHeight: 300 }}>
+                <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={true}>
                     {options.map((opt: any) => (
                         <TouchableOpacity
                             key={opt.value}

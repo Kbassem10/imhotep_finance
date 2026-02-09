@@ -37,8 +37,8 @@ function LandingPage() {
       {/* Floating background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-32 h-32 rounded-full filter blur-xl opacity-20 animate-float bg-[#366c6b] mix-blend-multiply dark:bg-emerald-600/40 dark:mix-blend-screen"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full filter blur-xl opacity-18 animate-float bg-[rgba(26,53,53,0.9)] dark:bg-teal-800/40" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 left-40 w-40 h-40 rounded-full filter blur-xl opacity-16 animate-float bg-[#2f7775] dark:bg-cyan-700/30 dark:mix-blend-screen" style={{ animationDelay: '4s' }}></div>
       </div>
 
       {/* Hero Section */}
@@ -75,6 +75,17 @@ function LandingPage() {
             >
               🔓 Sign In
             </Link>
+            <a
+              href="https://github.com/Imhotep-Tech/imhotep_finance/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chef-button text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg border-2 border-white transition-all duration-300 transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(90deg, #366c6b 0%, #1a3535 100%)',
+              }}
+            >
+              📥 Download
+            </a>
           </div>
           {/* Stats */}
           <div className="mt-16 flex justify-center">

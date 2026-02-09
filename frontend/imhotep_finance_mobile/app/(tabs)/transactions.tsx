@@ -100,16 +100,14 @@ export default function TransactionsScreen() {
                 setTransactions(prev => [...prev, ...newTransactions]);
             }
 
-            // Check if we have more pages (simple check based on return count)
-            if (newTransactions.length < 10) {
-                setHasMore(false);
-            } else {
-                setHasMore(true);
-            }
+            // Check if we have more pages from API response or based on count
+            const hasMoreFromAPI = res.data.has_more !== undefined ? res.data.has_more : (newTransactions.length >= 10);
+            setHasMore(hasMoreFromAPI);
 
         } catch (err) {
             console.error('Fetch error:', err);
             setError('Failed to load transactions');
+            setHasMore(false); // Stop pagination on error
         } finally {
             setLoading(false);
             setRefreshing(false);
