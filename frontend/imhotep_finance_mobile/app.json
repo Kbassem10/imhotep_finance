@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "imhotep_finance_mobile",
+    "slug": "imhotep_finance_mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/imhotep_finance.png",
+    "scheme": "imhotep-finance",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "associatedDomains": [
+        "applinks:imhotep-finance.vercel.app"
+      ]
+    },
+    "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "imhotep-finance.vercel.app",
+              "pathPrefix": "/verify-email"
+            },
+            {
+              "scheme": "https",
+              "host": "imhotep-finance.vercel.app",
+              "pathPrefix": "/verify-email-change"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "package": "com.imhoteptech.imhotep_finance_mobile"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/imhotep_finance.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/imhotep_finance.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dc580c3f-1d6d-40c1-a539-56f83e8b9818"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/dc580c3f-1d6d-40c1-a539-56f83e8b9818"
+    }
+  }
+}
