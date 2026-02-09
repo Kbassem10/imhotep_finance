@@ -28,14 +28,14 @@ const themes = {
     textSecondary: '#6B7280',
     placeholder: '#9CA3AF',
     border: '#D1D5DB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
+    primary: '#366c6b', // Imhotep teal
+    primaryLight: '#E6F0F0',
     error: '#DC2626',
     errorBg: '#FEF2F2',
     errorBorder: '#FECACA',
-    info: '#2563EB',
-    infoBg: '#EFF6FF',
-    infoBorder: '#BFDBFE',
+    info: '#366c6b',
+    infoBg: '#E6F0F0',
+    infoBorder: '#B2DFDB',
     inputBg: '#FFFFFF',
     divider: '#D1D5DB',
   },
@@ -46,14 +46,14 @@ const themes = {
     textSecondary: '#9CA3AF',
     placeholder: '#6B7280',
     border: '#4B5563',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
+    primary: '#4d8f8e', // Lighter teal for dark mode
+    primaryLight: '#234242',
     error: '#F87171',
     errorBg: '#7F1D1D',
     errorBorder: '#F87171',
-    info: '#60A5FA',
-    infoBg: '#1E3A5F',
-    infoBorder: '#3B82F6',
+    info: '#4d8f8e',
+    infoBg: '#234242',
+    infoBorder: '#4d8f8e',
     inputBg: '#4B5563',
     divider: '#4B5563',
   },
@@ -95,9 +95,19 @@ export default function LoginScreen() {
       let errorMessage = 'Login failed';
       let needsVerification = false;
 
+      // Check for specific error codes like web app
+      if (error.response?.data?.code === 'email_not_verified' && error.response?.data?.email) {
+        return {
+          success: false,
+          error: errorMessage,
+          needsVerification: true,
+          email: error.response.data.email
+        };
+      }
+
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
-        // Check if this is an email verification error
+        // Fallback check for message string if code isn't present
         if (errorMessage === 'Email not verified') {
           needsVerification = true;
         }
@@ -115,9 +125,10 @@ export default function LoginScreen() {
         needsVerification,
         info:
           error.response?.data?.message &&
-          error.response.data.error !== error.response.data.message
+            error.response.data.error !== error.response.data.message
             ? error.response.data.message
             : null,
+        email: null,
       };
     }
   };
@@ -140,10 +151,19 @@ export default function LoginScreen() {
     } else {
       if (result.needsVerification) {
         // Store email for verification page and redirect
-        await AsyncStorage.setItem('pendingVerificationEmail', formData.username);
+        // Use the email returned from backend if available, otherwise form data
+        const emailToVerify = result.email || formData.username;
+        await AsyncStorage.setItem('pendingVerificationEmail', emailToVerify);
         setInfo('Please verify your email. A verification code has been sent.');
+
         // Redirect to verification page after a short delay
-        setTimeout(() => router.push('/(auth)/email-verify'), 2000);
+        // Use replace instead of push to prevent going back to login state
+        setTimeout(() => {
+          router.replace({
+            pathname: '/(auth)/email-verify',
+            params: { email: emailToVerify }
+          });
+        }, 1500);
       } else {
         setError(result.error || 'Login failed');
         if (result.info) {

@@ -35,6 +35,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     'backend',
+    '10.218.226.170',
     SITE_DOMAIN.replace('http://', '').replace('https://', ''),
     ]
 

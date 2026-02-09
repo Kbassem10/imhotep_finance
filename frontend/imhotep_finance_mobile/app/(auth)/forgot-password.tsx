@@ -24,8 +24,8 @@ const themes = {
     textSecondary: '#6B7280',
     placeholder: '#9CA3AF',
     border: '#D1D5DB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
+    primary: '#366c6b', // Imhotep teal
+    primaryLight: '#E6F0F0',
     error: '#DC2626',
     errorBg: '#FEF2F2',
     errorBorder: '#FECACA',
@@ -42,8 +42,8 @@ const themes = {
     textSecondary: '#9CA3AF',
     placeholder: '#6B7280',
     border: '#4B5563',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
+    primary: '#4d8f8e', // Lighter teal for dark mode
+    primaryLight: '#234242',
     error: '#F87171',
     errorBg: '#7F1D1D',
     errorBorder: '#F87171',
@@ -411,15 +411,15 @@ export default function ForgotPasswordScreen() {
       >
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           {/* Logo */}
-            <View style={styles.logoContainer}>
-              <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
-                  <Image
-                    source={require('@/assets/images/imhotep_finance.png')}
-                    style={{ width: 64, height: 64 }}
-                    resizeMode="contain"
-                  />
-              </View>
+          <View style={styles.logoContainer}>
+            <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
+              <Image
+                source={require('@/assets/images/imhotep_finance.png')}
+                style={{ width: 64, height: 64 }}
+                resizeMode="contain"
+              />
             </View>
+          </View>
 
           <Text style={[styles.title, { color: colors.text }]}>Forgot Password?</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>

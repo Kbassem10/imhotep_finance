@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 1. Define your environments
 const PROD_URL = 'https://imhotepf.pythonanywhere.com';
-const DEV_URL = 'http://192.168.100.253:8000'; // Your local Fedora IP
+const DEV_URL = 'http://10.218.226.170:8000'; // Your local Fedora IP
 
 // 2. Smart Selection Logic
 // Priority 1: If an .env file exists, use that.
