@@ -22,13 +22,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// const Logo = require('@/assets/images/react-logo.png'); // Placeholder or use actual logo if available
-// Assuming existing logo might be used or just text for now as I don't see the logo file in the file list clearly, 
-// strictly speaking user said "shows the networth... exactly like the react app".
-// I'll try to use a text logo or an icon for now to avoid missing asset issues.
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  // ... existing state ...
   const [networth, setNetworth] = useState('0');
   const [favoriteCurrency, setFavoriteCurrency] = useState('USD');
   const [score, setScore] = useState<number | null>(null);
@@ -90,8 +89,27 @@ export default function Dashboard() {
     setRefreshing(false);
   };
 
+  const runApplyScheduledIfNeeded = async () => {
+    try {
+      const key = 'lastApplyScheduledDate';
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const last = await AsyncStorage.getItem(key);
+
+      if (last === today) return;
+
+      await api.post('/api/finance-management/scheduled-trans/apply-scheduled-trans/');
+
+      // mark as done for today
+      await AsyncStorage.setItem(key, today);
+      console.log('Applied scheduled transactions for today');
+    } catch (err) {
+      console.warn('apply_scheduled_trans failed', err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    runApplyScheduledIfNeeded();
   }, []);
 
   // Reload when screen comes into focus
@@ -104,10 +122,7 @@ export default function Dashboard() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchData();
-    // Also trigger Apply Scheduled Trans
-    const today = new Date().toISOString().slice(0, 10);
-    // Simple check without local storage for now or could implement AsyncStorage check
-    api.post('/api/finance-management/scheduled-trans/apply-scheduled-trans/').catch(() => { });
+    runApplyScheduledIfNeeded();
   };
 
   const getScoreColor = () => {

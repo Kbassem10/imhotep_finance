@@ -10,16 +10,16 @@ import {
     KeyboardAvoidingView,
     Platform,
     Alert,
-    ActivityIndicator
+    ActivityIndicator,
+    Switch
 } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../constants/api';
 import CurrencySelect from './CurrencySelect';
 import CategorySelect from './CategorySelect';
 
-interface AddTransactionModalProps {
+interface AddScheduledTransactionModalProps {
     onClose: () => void;
     onSuccess: () => void;
     initialType?: 'deposit' | 'withdraw';
@@ -28,7 +28,7 @@ interface AddTransactionModalProps {
     visible: boolean;
 }
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+const AddScheduledTransactionModal: React.FC<AddScheduledTransactionModalProps> = ({
     onClose,
     onSuccess,
     initialType = 'deposit',
@@ -41,25 +41,33 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     const [desc, setDesc] = useState(initialValues.desc || '');
     const [category, setCategory] = useState(initialValues.category || '');
     const [currency, setCurrency] = useState(initialValues.currency || '');
-    const [date, setDate] = useState(initialValues.date ? new Date(initialValues.date) : new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [dayOfMonth, setDayOfMonth] = useState(initialValues.day_of_month ? String(initialValues.day_of_month) : '');
+    const [isActive, setIsActive] = useState(initialValues.status !== undefined ? initialValues.status : true);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (visible) {
-            setStatus(initialValues.trans_status || initialType);
+            setStatus(initialValues.scheduled_trans_status || initialType);
             setAmount(initialValues.amount ? String(initialValues.amount) : '');
-            setDesc(initialValues.trans_details || '');
+            setDesc(initialValues.scheduled_trans_details || '');
             setCategory(initialValues.category || '');
             setCurrency(initialValues.currency || '');
-            setDate(initialValues.date ? new Date(initialValues.date) : new Date());
+            setDayOfMonth(initialValues.day_of_month ? String(initialValues.day_of_month) : '');
+            setIsActive(initialValues.status !== undefined ? initialValues.status : true);
         }
-    }, [visible]);
+    }, [visible, initialValues, initialType]);
 
     const handleSubmit = async () => {
         setLoading(true);
-        if (!amount || !currency) {
-            Alert.alert('Error', 'Amount and currency are required.');
+        if (!amount || !currency || !dayOfMonth) {
+            Alert.alert('Error', 'Amount, currency, and day of month are required.');
+            setLoading(false);
+            return;
+        }
+
+        const day = parseInt(dayOfMonth, 10);
+        if (isNaN(day) || day < 1 || day > 31) {
+            Alert.alert('Error', 'Day of month must be between 1 and 31.');
             setLoading(false);
             return;
         }
@@ -68,48 +76,37 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             const payload = {
                 amount,
                 currency,
-                trans_status: status,
+                scheduled_trans_status: status,
                 category,
-                trans_details: desc,
-                date: date.toISOString().split('T')[0],
+                scheduled_trans_details: desc,
+                day_of_month: day,
+                status: isActive
             };
 
             if (editMode && initialValues.id) {
                 await api.post(
-                    `/api/finance-management/transaction/update-transactions/${initialValues.id}/`,
+                    `/api/finance-management/scheduled-trans/update-scheduled-trans/${initialValues.id}/`,
                     payload
                 );
-                Alert.alert('Success', 'Transaction updated successfully!');
+                Alert.alert('Success', 'Scheduled transaction updated successfully!');
             } else {
-                await api.post('/api/finance-management/transaction/add-transactions/', payload);
-                Alert.alert('Success', 'Transaction added successfully!');
+                await api.post('/api/finance-management/scheduled-trans/add-scheduled-trans/', payload);
+                Alert.alert('Success', 'Scheduled transaction added successfully!');
             }
 
             onSuccess();
         } catch (err: any) {
-            const errorMessage = err.response?.data?.error || (editMode ? 'Failed to update transaction.' : 'Failed to add transaction.');
+            const errorMessage = err.response?.data?.error || (editMode ? 'Failed to update scheduled transaction.' : 'Failed to add scheduled transaction.');
             Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    const onDateChange = (event: any, selectedDate?: Date) => {
-        setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-        if (selectedDate) {
-            setDate(selectedDate);
-        }
-        if (Platform.OS === 'android') {
-            setShowDatePicker(false);
-        }
-    };
-
-
-
     const handleDelete = async () => {
         Alert.alert(
-            'Delete Transaction',
-            'Are you sure you want to delete this transaction?',
+            'Delete Scheduled Transaction',
+            'Are you sure you want to delete this scheduled transaction?',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -119,12 +116,12 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                         setLoading(true);
                         try {
                             if (initialValues.id) {
-                                await api.delete(`/api/finance-management/transaction/delete-transactions/${initialValues.id}/`);
-                                Alert.alert('Success', 'Transaction deleted successfully!');
+                                await api.delete(`/api/finance-management/scheduled-trans/delete-scheduled-trans/${initialValues.id}/`);
+                                Alert.alert('Success', 'Scheduled transaction deleted successfully!');
                                 onSuccess();
                             }
                         } catch (err: any) {
-                            Alert.alert('Error', err.response?.data?.error || 'Failed to delete transaction.');
+                            Alert.alert('Error', err.response?.data?.error || 'Failed to delete scheduled transaction.');
                         } finally {
                             setLoading(false);
                         }
@@ -174,7 +171,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             >
                 <View style={[styles.modalView, themeStyles.container]}>
                     <View style={styles.header}>
-                        <Text style={[styles.title, themeStyles.text]}>{editMode ? 'Edit Transaction' : 'Add Transaction'}</Text>
+                        <Text style={[styles.title, themeStyles.text]}>{editMode ? 'Edit Scheduled' : 'Add Scheduled'}</Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={themeStyles.closeIcon} />
                         </TouchableOpacity>
@@ -182,14 +179,14 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
                     <ScrollView contentContainerStyle={styles.form}>
                         {/* Type Selector */}
-                        <View style={[styles.typeContainer, themeStyles.typeButton, editMode && themeStyles.disabledType]}>
+                        <View style={[styles.typeContainer, themeStyles.typeButton]}>
                             <TouchableOpacity
                                 style={[
                                     styles.typeButton,
                                     status === 'deposit' && (isDark ? { backgroundColor: 'rgba(16, 185, 129, 0.2)' } : styles.typeButtonIncome)
                                 ]}
-                                onPress={() => !editMode && setStatus('deposit')}
-                                activeOpacity={editMode ? 1 : 0.7}
+                                onPress={() => setStatus('deposit')}
+                                activeOpacity={0.7}
                             >
                                 <Text style={[styles.typeText, themeStyles.subText, status === 'deposit' && (isDark ? { color: '#10b981' } : styles.typeTextActive)]}>Income</Text>
                             </TouchableOpacity>
@@ -198,12 +195,24 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                                     styles.typeButton,
                                     status === 'withdraw' && (isDark ? { backgroundColor: 'rgba(239, 68, 68, 0.2)' } : styles.typeButtonExpense)
                                 ]}
-                                onPress={() => !editMode && setStatus('withdraw')}
-                                activeOpacity={editMode ? 1 : 0.7}
+                                onPress={() => setStatus('withdraw')}
+                                activeOpacity={0.7}
                             >
                                 <Text style={[styles.typeText, themeStyles.subText, status === 'withdraw' && (isDark ? { color: '#ef4444' } : styles.typeTextActive)]}>Expense</Text>
                             </TouchableOpacity>
                         </View>
+
+                        {/* Day of Month */}
+                        <Text style={[styles.label, themeStyles.subText]}>Day of Month (1-31)</Text>
+                        <TextInput
+                            style={[styles.input, themeStyles.input]}
+                            placeholder="e.g. 1, 15, 31"
+                            placeholderTextColor={isDark ? '#94a3b8' : '#aaa'}
+                            keyboardType="numeric"
+                            value={dayOfMonth}
+                            onChangeText={setDayOfMonth}
+                            maxLength={2}
+                        />
 
                         {/* Amount */}
                         <Text style={[styles.label, themeStyles.subText]}>Amount</Text>
@@ -242,25 +251,16 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                             onChangeText={setDesc}
                         />
 
-                        {/* Date */}
-                        <Text style={[styles.label, themeStyles.subText]}>Date</Text>
-                        <TouchableOpacity
-                            style={[styles.dateButton, themeStyles.input]}
-                            onPress={() => setShowDatePicker(true)}
-                        >
-                            <Text style={[styles.dateText, themeStyles.text]}>{date.toISOString().split('T')[0]}</Text>
-                            <Ionicons name="calendar-outline" size={20} color={isDark ? '#94a3b8' : '#666'} />
-                        </TouchableOpacity>
-
-                        {showDatePicker && (
-                            <DateTimePicker
-                                value={date}
-                                mode="date"
-                                display="default"
-                                onChange={onDateChange}
-                                themeVariant={isDark ? 'dark' : 'light'}
+                        {/* Status Toggle */}
+                        <View style={styles.switchContainer}>
+                            <Text style={[styles.label, themeStyles.subText, { marginTop: 0, marginBottom: 0 }]}>Active Status</Text>
+                            <Switch
+                                value={isActive}
+                                onValueChange={setIsActive}
+                                trackColor={{ false: '#767577', true: isDark ? '#047857' : '#34d399' }}
+                                thumbColor={isActive ? (isDark ? '#34d399' : '#047857') : '#f4f3f4'}
                             />
-                        )}
+                        </View>
 
                         {/* Submit Button */}
                         <TouchableOpacity
@@ -285,7 +285,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                                 onPress={handleDelete}
                                 disabled={loading}
                             >
-                                <Text style={styles.deleteButtonText}>Delete Transaction</Text>
+                                <Text style={styles.deleteButtonText}>Delete Scheduled Transaction</Text>
                             </TouchableOpacity>
                         )}
                     </ScrollView>
@@ -372,20 +372,6 @@ const styles = StyleSheet.create({
     typeTextActive: {
         color: '#000',
     },
-    dateButton: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#f9f9f9',
-        borderRadius: 12,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: '#eee',
-    },
-    dateText: {
-        fontSize: 16,
-        color: '#333',
-    },
     submitButton: {
         marginTop: 32,
         padding: 16,
@@ -410,7 +396,14 @@ const styles = StyleSheet.create({
         color: '#ef4444',
         fontSize: 16,
         fontWeight: '600',
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 10,
     }
 });
 
-export default AddTransactionModal;
+export default AddScheduledTransactionModal;

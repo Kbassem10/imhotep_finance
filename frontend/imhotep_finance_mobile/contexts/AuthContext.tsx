@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Assuming you have an axios instance configured similarly to your web app
-import api from '../constants/api'; 
+import api from '../constants/api';
 
 interface AuthContextType {
   user: any;
@@ -94,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (refreshPromise) {
       return refreshPromise;
     }
-    
+
     // We must read refresh token from ref or storage here
     const currentRefreshToken = refreshTokenRef.current || await AsyncStorage.getItem('refresh_token');
 
@@ -141,7 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshTokenRef.current = null;
     delete axios.defaults.headers.common['Authorization'];
     if (api) delete api.defaults.headers.common['Authorization'];
-    
+
     await AsyncStorage.removeItem('access_token');
     await AsyncStorage.removeItem('refresh_token');
     await AsyncStorage.removeItem('user');
@@ -155,7 +154,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         async (error) => {
           const originalRequest = error.config;
           const url = originalRequest?.url || '';
-          
+
           // Prevent infinite loops on auth endpoints
           const isAuthEndpoint =
             url.includes('/api/auth/token/refresh/') ||
@@ -203,7 +202,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       if (!storageLoaded) return;
-      
+
       const currentAccessToken = accessTokenRef.current;
       const currentRefreshToken = refreshTokenRef.current;
 
