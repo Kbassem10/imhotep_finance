@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useUpdateChecker } from '@/hooks/use-update-checker';
 import api from '@/constants/api';
+import CurrencySelect from '@/components/CurrencySelect'; // Import CurrencySelect
 
 // Theme colors
 const themes = {
@@ -34,8 +35,8 @@ const themes = {
     placeholder: '#9CA3AF',
     border: '#D1D5DB',
     borderLight: '#E5E7EB',
-    primary: '#6366F1',
-    primaryLight: '#EEF2FF',
+    primary: '#366c6b', // Updated to match dashboard
+    primaryLight: '#eaf6f6', // Updated to match dashboard
     error: '#EF4444',
     errorLight: '#FEF2F2',
     success: '#22C55E',
@@ -53,8 +54,8 @@ const themes = {
     placeholder: '#6B7280',
     border: '#4B5563',
     borderLight: '#374151',
-    primary: '#818CF8',
-    primaryLight: '#312E81',
+    primary: '#51adac', // Updated to match dashboard
+    primaryLight: '#244746', // Updated to match dashboard
     error: '#F87171',
     errorLight: '#7F1D1D',
     success: '#4ADE80',
@@ -82,7 +83,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'financial'>('profile');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -115,6 +116,11 @@ export default function ProfileScreen() {
     confirm: false,
   });
 
+  // Financial Data
+  const [target, setTarget] = useState('');
+  const [currency, setCurrency] = useState('');
+  const [initialCurrency, setInitialCurrency] = useState('');
+
   // Load profile data on component mount
   useEffect(() => {
     if (user) {
@@ -126,6 +132,42 @@ export default function ProfileScreen() {
       });
     }
   }, [user]);
+
+  // Fetch Financial Data when tab is active
+  useEffect(() => {
+    if (activeTab === 'financial') {
+      fetchFinancialData();
+    }
+  }, [activeTab]);
+
+  const fetchFinancialData = async () => {
+    setLoading(true);
+    try {
+      // Fetch Target
+      try {
+        const targetRes = await api.get('/api/finance-management/target/get-target/');
+        setTarget(targetRes.data.target ? String(targetRes.data.target) : '');
+      } catch (e: any) {
+        if (e.response?.status !== 404) console.warn('Fetch target error', e);
+      }
+
+      // Fetch Currency
+      try {
+        const currRes = await api.get('/api/get-fav-currency/');
+        const curr = currRes.data.favorite_currency || '';
+        setCurrency(curr);
+        setInitialCurrency(curr);
+      } catch (e) {
+        console.warn('Fetch currency error', e);
+      }
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleProfileSubmit = async () => {
     setLoading(true);
@@ -222,6 +264,40 @@ export default function ProfileScreen() {
     setLoading(false);
   };
 
+  const handleFinancialSubmit = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update Target
+      if (target !== '') {
+        if (isNaN(Number(target)) || Number(target) < 0) {
+          setError('Target must be a non-negative number');
+          setLoading(false);
+          return;
+        }
+        await api.post('/api/finance-management/target/manage-target/', { target });
+      }
+
+      // Update Currency if changed
+      if (currency && currency !== initialCurrency) {
+        const res = await api.post('/api/change-fav-currency/', { fav_currency: currency });
+        if (!res.data.success) {
+          throw new Error('Failed to update currency');
+        }
+        setInitialCurrency(currency);
+      }
+
+      setSuccess('Financial settings updated successfully!');
+
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message || 'Failed to update settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -258,248 +334,303 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-        <ThemedView style={styles.header}>
-          <ThemedText type="title" style={styles.title}>My Profile</ThemedText>
-          <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Manage your account and preferences
-          </ThemedText>
-        </ThemedView>
-
-        {/* User Avatar */}
-        <View style={styles.avatarContainer}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Ionicons name="person" size={40} color="#fff" />
-          </View>
-          <ThemedText type="subtitle" style={styles.userName}>
-            {user?.username || 'User'}
-          </ThemedText>
-        </View>
-
-        {/* Tabs */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.surface }]}>
-          <Pressable
-            style={[
-              styles.tab,
-              activeTab === 'profile' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
-            ]}
-            onPress={() => { setActiveTab('profile'); setError(''); setSuccess(''); }}
-          >
-            <ThemedText style={[styles.tabText, activeTab === 'profile' && { color: colors.primary }]}>
-              Profile
+          <ThemedView style={styles.header}>
+            <ThemedText type="title" style={styles.title}>My Profile</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Manage your account and preferences
             </ThemedText>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.tab,
-              activeTab === 'password' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
-            ]}
-            onPress={() => { setActiveTab('password'); setError(''); setSuccess(''); }}
-          >
-            <ThemedText style={[styles.tabText, activeTab === 'password' && { color: colors.primary }]}>
-              Password
+          </ThemedView>
+
+          {/* User Avatar */}
+          <View style={styles.avatarContainer}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Ionicons name="person" size={40} color="#fff" />
+            </View>
+            <ThemedText type="subtitle" style={styles.userName}>
+              {user?.username || 'User'}
             </ThemedText>
-          </Pressable>
-        </View>
-
-        {/* Messages */}
-        {error ? (
-          <View style={[styles.messageBox, { backgroundColor: colors.errorLight, borderColor: colors.error }]}>
-            <ThemedText style={{ color: colors.error }}>{error}</ThemedText>
           </View>
-        ) : null}
-        {success ? (
-          <View style={[styles.messageBox, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
-            <ThemedText style={{ color: colors.success }}>{success}</ThemedText>
-          </View>
-        ) : null}
 
-        {/* Profile Form */}
-        {activeTab === 'profile' && (
-          <View style={styles.form}>
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>First Name</ThemedText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={profileData.first_name}
-                  onChangeText={(text) => setProfileData({ ...profileData, first_name: text })}
-                  placeholder="First name"
-                  placeholderTextColor={colors.placeholder}
-                />
-              </View>
-              <View style={styles.halfInput}>
-                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>Last Name</ThemedText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={profileData.last_name}
-                  onChangeText={(text) => setProfileData({ ...profileData, last_name: text })}
-                  placeholder="Last name"
-                  placeholderTextColor={colors.placeholder}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Username <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={profileData.username}
-                onChangeText={(text) => setProfileData({ ...profileData, username: text })}
-                placeholder="Username"
-                placeholderTextColor={colors.placeholder}
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Email <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={profileData.email}
-                onChangeText={(text) => setProfileData({ ...profileData, email: text })}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.placeholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                onFocus={() => scrollToInput(350)}
-              />
-            </View>
-
+          {/* Tabs */}
+          <View style={[styles.tabContainer, { backgroundColor: colors.surface }]}>
             <Pressable
-              style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
-              onPress={handleProfileSubmit}
-              disabled={loading}
+              style={[
+                styles.tab,
+                activeTab === 'profile' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
+              ]}
+              onPress={() => { setActiveTab('profile'); setError(''); setSuccess(''); }}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ThemedText style={styles.buttonText}>Update Profile</ThemedText>
-              )}
+              <ThemedText style={[styles.tabText, activeTab === 'profile' && { color: colors.primary }]}>
+                Profile
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.tab,
+                activeTab === 'password' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
+              ]}
+              onPress={() => { setActiveTab('password'); setError(''); setSuccess(''); }}
+            >
+              <ThemedText style={[styles.tabText, activeTab === 'password' && { color: colors.primary }]}>
+                Password
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.tab,
+                activeTab === 'financial' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
+              ]}
+              onPress={() => { setActiveTab('financial'); setError(''); setSuccess(''); }}
+            >
+              <ThemedText style={[styles.tabText, activeTab === 'financial' && { color: colors.primary }]}>
+                Financial
+              </ThemedText>
             </Pressable>
           </View>
-        )}
 
-        {/* Password Form */}
-        {activeTab === 'password' && (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Current Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.current_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, current_password: text })}
-                  placeholder="Current password"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.current}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                >
-                  <Ionicons
-                    name={showPasswords.current ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </Pressable>
-              </View>
+          {/* Messages */}
+          {error ? (
+            <View style={[styles.messageBox, { backgroundColor: colors.errorLight, borderColor: colors.error }]}>
+              <ThemedText style={{ color: colors.error }}>{error}</ThemedText>
             </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                New Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.new_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, new_password: text })}
-                  placeholder="New password (min 8 characters)"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.new}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                >
-                  <Ionicons
-                    name={showPasswords.new ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </Pressable>
-              </View>
+          ) : null}
+          {success ? (
+            <View style={[styles.messageBox, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
+              <ThemedText style={{ color: colors.success }}>{success}</ThemedText>
             </View>
+          ) : null}
 
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Confirm Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.confirm_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, confirm_password: text })}
-                  placeholder="Confirm new password"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.confirm}
-                  onFocus={() => scrollToInput(450)}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                >
-                  <Ionicons
-                    name={showPasswords.confirm ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
+          {/* Profile Form */}
+          {activeTab === 'profile' && (
+            <View style={styles.form}>
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <ThemedText style={[styles.label, { color: colors.textSecondary }]}>First Name</ThemedText>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                    value={profileData.first_name}
+                    onChangeText={(text) => setProfileData({ ...profileData, first_name: text })}
+                    placeholder="First name"
+                    placeholderTextColor={colors.placeholder}
                   />
-                </Pressable>
+                </View>
+                <View style={styles.halfInput}>
+                  <ThemedText style={[styles.label, { color: colors.textSecondary }]}>Last Name</ThemedText>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                    value={profileData.last_name}
+                    onChangeText={(text) => setProfileData({ ...profileData, last_name: text })}
+                    placeholder="Last name"
+                    placeholderTextColor={colors.placeholder}
+                  />
+                </View>
               </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Username <ThemedText style={{ color: colors.error }}>*</ThemedText>
+                </ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                  value={profileData.username}
+                  onChangeText={(text) => setProfileData({ ...profileData, username: text })}
+                  placeholder="Username"
+                  placeholderTextColor={colors.placeholder}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Email <ThemedText style={{ color: colors.error }}>*</ThemedText>
+                </ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                  value={profileData.email}
+                  onChangeText={(text) => setProfileData({ ...profileData, email: text })}
+                  placeholder="you@example.com"
+                  placeholderTextColor={colors.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onFocus={() => scrollToInput(350)}
+                />
+              </View>
+
+              <Pressable
+                style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
+                onPress={handleProfileSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Update Profile</ThemedText>
+                )}
+              </Pressable>
             </View>
-
-            <Pressable
-              style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
-              onPress={handlePasswordSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ThemedText style={styles.buttonText}>Change Password</ThemedText>
-              )}
-            </Pressable>
-          </View>
-        )}
-
-        {/* Check for Updates Button */}
-        <Pressable 
-          style={[styles.updateButton, { backgroundColor: colors.primary }]} 
-          onPress={() => checkForUpdates()}
-          disabled={checkingUpdates}
-        >
-          {checkingUpdates ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="cloud-download-outline" size={24} color="#fff" />
-              <ThemedText style={styles.updateButtonText}>Check for Updates</ThemedText>
-            </>
           )}
-        </Pressable>
 
-        {/* Logout Button */}
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#fff" />
-          <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
-        </Pressable>
+          {/* Password Form */}
+          {activeTab === 'password' && (
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Current Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                    value={passwordData.current_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, current_password: text })}
+                    placeholder="Current password"
+                    placeholderTextColor={colors.placeholder}
+                    secureTextEntry={!showPasswords.current}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                  >
+                    <Ionicons
+                      name={showPasswords.current ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.primary}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  New Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                    value={passwordData.new_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, new_password: text })}
+                    placeholder="New password (min 8 characters)"
+                    placeholderTextColor={colors.placeholder}
+                    secureTextEntry={!showPasswords.new}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                  >
+                    <Ionicons
+                      name={showPasswords.new ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.primary}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Confirm Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                    value={passwordData.confirm_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, confirm_password: text })}
+                    placeholder="Confirm new password"
+                    placeholderTextColor={colors.placeholder}
+                    secureTextEntry={!showPasswords.confirm}
+                    onFocus={() => scrollToInput(450)}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                  >
+                    <Ionicons
+                      name={showPasswords.confirm ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.primary}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <Pressable
+                style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
+                onPress={handlePasswordSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Change Password</ThemedText>
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* Financial Settings Form */}
+          {activeTab === 'financial' && (
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Monthly Target Amount
+                </ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                  value={target}
+                  onChangeText={(text) => setTarget(text.replace(/[^0-9.]/g, ''))}
+                  placeholder="0.00"
+                  placeholderTextColor={colors.placeholder}
+                  keyboardType="numeric"
+                />
+                <ThemedText style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
+                  Set your monthly financial goal to track progress on the dashboard.
+                </ThemedText>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
+                  Favorite Currency
+                </ThemedText>
+                <CurrencySelect
+                  value={currency}
+                  onChange={setCurrency}
+                />
+              </View>
+
+              <Pressable
+                style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
+                onPress={handleFinancialSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Save Financial Settings</ThemedText>
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* Check for Updates Button */}
+          <Pressable
+            style={[styles.updateButton, { backgroundColor: colors.primary }]}
+            onPress={() => checkForUpdates()}
+            disabled={checkingUpdates}
+          >
+            {checkingUpdates ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="cloud-download-outline" size={24} color="#fff" />
+                <ThemedText style={styles.updateButtonText}>Check for Updates</ThemedText>
+              </>
+            )}
+          </Pressable>
+
+          {/* Logout Button */}
+          <Pressable style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+            <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
 
