@@ -301,20 +301,28 @@ const QuickLink = ({ icon, title, subtitle, color, href, isDark }: any) => {
     green: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7'
   };
 
+  const handlePress = () => {
+    // Map hrefs to actual routes
+    const routeMap: any = {
+      '/show_trans': '/(tabs)/transactions',
+      '/show_scheduled_trans': '/(tabs)/scheduled',
+      '/show_networth_details': '/show-networth-details',
+      '/reports': '/(tabs)/reports',
+      '/profile': '/(tabs)/profile'
+    };
+
+    const route = routeMap[href];
+    if (route) {
+      router.push(route as any);
+    } else {
+      Alert.alert('Coming Soon', 'This feature is under construction.');
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[styles.linkCard, { backgroundColor: isDark ? '#1e293b' : 'white' }]}
-      onPress={() => {
-        // Check if route exists or just navigate to profile for now if unsure
-        // In a real app we would ensure these routes exist.
-        // For now, only profile exists.
-        if (href === '/profile') {
-          router.push('/(tabs)/profile');
-        } else {
-          Alert.alert('Coming Soon', 'This feature is under construction for mobile.');
-          // router.push(href); // Uncomment when routes exist
-        }
-      }}
+      onPress={handlePress}
     >
       <View style={[styles.linkIcon, { backgroundColor: bgMap[color] }]}>
         <Ionicons name={icon} size={24} color={colorMap[color]} />
