@@ -16,6 +16,11 @@
     },
     "android": {
       "appName": "Imhotep Finance",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/imhotep_finance.png",
+        "monochromeImage": "./assets/images/icon-monochrome.png",
+        "backgroundColor": "#366c6b"
+      },
       "intentFilters": [
         {
           "action": "VIEW",
@@ -67,7 +72,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "dc580c3f-1d6d-40c1-a539-56f83e8b9818"
+        "projectId": "c1a10f77-5fb8-4ce7-b257-80e64d5dbb2a"
       }
     },
     "runtimeVersion": {
@@ -75,6 +80,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/dc580c3f-1d6d-40c1-a539-56f83e8b9818"
-    }
+    },
+    "owner": "imhoteptech"
   }
 }
