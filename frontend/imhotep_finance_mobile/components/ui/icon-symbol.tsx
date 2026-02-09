@@ -23,6 +23,7 @@ const MAPPING = {
   'person.fill': 'person',
   'repeat': 'repeat',
   'star.fill': 'star',
+  'chart.pie.fill': 'pie-chart',
 } as IconMapping;
 
 /**
