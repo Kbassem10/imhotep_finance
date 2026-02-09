@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "imhotep_finance_mobile",
-    "slug": "imhotep_finance_mobile",
+    "name": "Imhotep Financial Manager",
+    "slug": "imhotep-finance",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/imhotep_finance.png",
@@ -9,11 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "displayName": "Imhotep Finance",
       "associatedDomains": [
         "applinks:imhotep-finance.vercel.app"
       ]
     },
     "android": {
+      "appName": "Imhotep Finance",
       "intentFilters": [
         {
           "action": "VIEW",
