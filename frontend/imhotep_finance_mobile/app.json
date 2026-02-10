@@ -2,7 +2,7 @@
   "expo": {
     "name": "Imhotep Financial Manager",
     "slug": "imhotep-finance",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/imhotep_finance.png",
     "scheme": "imhotep-finance",
@@ -79,7 +79,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/dc580c3f-1d6d-40c1-a539-56f83e8b9818"
+      "url": "https://u.expo.dev/c1a10f77-5fb8-4ce7-b257-80e64d5dbb2a"
     },
     "owner": "imhoteptech"
   }
