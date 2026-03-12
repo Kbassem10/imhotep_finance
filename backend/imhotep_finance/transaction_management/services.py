@@ -10,6 +10,18 @@ from django.db import transaction
 from wishlist_management.models import Wishlist
 import csv
 
+def _find_networth(user, currency, place):
+    """Find a NetWorth entry by user, currency, and place.
+    
+    Since `place` is an EncryptedCharField, we cannot filter on it at the DB level.
+    We filter by user+currency, then compare place in Python.
+    """
+    for nw in NetWorth.objects.filter(user=user, currency=currency):
+        if nw.place == place:
+            return nw
+    return None
+
+
 def create_transaction(*,user, amount, currency, trans_details, category, trans_status, transaction_date, place):
     """Create a transaction and update networth."""
 
@@ -42,7 +54,7 @@ def create_transaction(*,user, amount, currency, trans_details, category, trans_
     place = place or "Cash"
 
     if trans_status.lower() == "withdraw":
-        net_worth = NetWorth.objects.filter(user=user, currency=currency, place=place).first()
+        net_worth = _find_networth(user, currency, place)
         current_balance = net_worth.total if net_worth else 0.00
 
         if current_balance < amount:
@@ -62,12 +74,10 @@ def create_transaction(*,user, amount, currency, trans_details, category, trans_
         )
 
         #Update NetWorth
-        net_worth_obj, created = NetWorth.objects.get_or_create(
-            user=user,
-            currency=currency,
-            place=place,
-            defaults={'total': 0},
-        )
+        net_worth_obj = _find_networth(user, currency, place)
+        if net_worth_obj is None:
+            net_worth_obj = NetWorth.objects.create(user=user, currency=currency, place=place, total=0.00)
+        
         if trans_status.lower() == "deposit":
             net_worth_obj.total += amount
         else:
@@ -91,8 +101,10 @@ def delete_transaction(*, user, transaction_id):
     old_place = trans_obj.place
     transaction_date = trans_obj.date
 
-    # Get current networth
-    net_worth_obj = get_object_or_404(NetWorth, user=user, currency=old_currency, place=old_place)
+    # Get current networth (place is encrypted, so we find it in Python)
+    net_worth_obj = _find_networth(user, old_currency, old_place)
+    if net_worth_obj is None:
+        raise ValidationError("NetWorth entry not found for this transaction.")
     old_total = float(net_worth_obj.total)
 
     # Calculate new total
@@ -166,17 +178,15 @@ def update_transaction(*, user, transaction_id, amount, currency, trans_details,
     old_place = trans_obj.place
 
     # Get or create networth for the currency
-    net_worth_obj, created = NetWorth.objects.get_or_create(
-        user=user,
-        currency=currency,
-        place=place,
-        defaults={'total': 0}
-    )
+    # place is encrypted, so we can't use get_or_create with it
+    net_worth_obj = _find_networth(user, currency, place)
+    if net_worth_obj is None:
+        net_worth_obj = NetWorth.objects.create(user=user, currency=currency, place=place, total=0)
     current_total = float(net_worth_obj.total)
 
     # If currency/place changed, reverse old transaction in the old bucket
     if old_currency != currency or old_place != place:
-        old_net_worth = NetWorth.objects.filter(user=user, currency=old_currency, place=old_place).first()
+        old_net_worth = _find_networth(user, old_currency, old_place)
         if old_net_worth:
             # Reverse old transaction from old currency
             if old_status.lower() == "withdraw":

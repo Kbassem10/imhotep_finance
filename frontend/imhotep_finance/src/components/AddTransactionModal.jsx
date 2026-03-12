@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import CurrencySelect from './CurrencySelect';
 import CategorySelect from './CategorySelect';
+import PlaceSelect from './PlaceSelect';
 
 const AddTransactionModal = ({
   onClose,
@@ -14,26 +15,12 @@ const AddTransactionModal = ({
   const [amount, setAmount] = useState(initialValues.amount || '');
   const [desc, setDesc] = useState(initialValues.desc || '');
   const [category, setCategory] = useState(initialValues.category || '');
+  const [place, setPlace] = useState(initialValues.place || '');
   const [currency, setCurrency] = useState(initialValues.currency || '');
   const [date, setDate] = useState(initialValues.date || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // Fetch categories when status changes
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setCategoriesLoading(true);
-      try {
-        const res = await axios.get(`/api/finance-management/get-category/?status=${status}`);
-        setCategoriesList(res.data.category || []);
-      } catch {
-        setCategoriesList([]);
-      }
-      setCategoriesLoading(false);
-    };
-    fetchCategories();
-  }, [status]);
 
   // If editMode, update fields when initialValues change
   useEffect(() => {
@@ -41,15 +28,12 @@ const AddTransactionModal = ({
       setAmount(initialValues.amount || '');
       setDesc(initialValues.desc || '');
       setCategory(initialValues.category || '');
+      setPlace(initialValues.place || '');
       setCurrency(initialValues.currency || '');
       setDate(initialValues.date || '');
       setStatus(initialValues.trans_status || initialType);
     }
   }, [editMode, initialValues, initialType]);
-
-  const handleCategorySelect = (e) => {
-    setCategory(e.target.value);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,6 +54,7 @@ const AddTransactionModal = ({
             currency,
             trans_status: status,
             category,
+            place,
             trans_details: desc,
             date: date || undefined,
           }
@@ -81,6 +66,7 @@ const AddTransactionModal = ({
           currency,
           trans_status: status,
           category,
+          place,
           trans_details: desc,
           date: date || undefined,
         });
@@ -170,6 +156,13 @@ const AddTransactionModal = ({
                 value={category}
                 onChange={setCategory}
                 status={status}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Place</label>
+              <PlaceSelect
+                value={place}
+                onChange={setPlace}
               />
             </div>
             <div>

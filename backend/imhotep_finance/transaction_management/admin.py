@@ -110,14 +110,16 @@ class NetWorthAdmin(ModelAdmin):
     list_filter = [
         'currency', 
         'created_at',
-        'user'
+        'user',
+        'place'
     ]
     
     list_display = [
         'user', 
         'total', 
         'currency', 
-        'created_at'
+        'created_at',
+        'place'
     ]
     
     list_display_links = ['user']
