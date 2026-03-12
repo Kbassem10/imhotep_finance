@@ -10,7 +10,8 @@ def get_transactions_for_user(
     end_date = None,
     category = None,
     trans_status = None,
-    details_search = None
+    details_search = None,
+    place_search = None
 ):
     """Get filtered transactions for a user.
     
@@ -39,7 +40,7 @@ def get_transactions_for_user(
     
     # If we need to filter by encrypted fields (category or details_search),
     # we must filter in memory after decryption
-    if category or details_search:
+    if category or details_search or place_search:
         # Convert queryset to list to access decrypted values
         transactions_list = list(queryset)
         filtered_transactions = []
@@ -48,7 +49,8 @@ def get_transactions_for_user(
             # Access encrypted fields (they are automatically decrypted when accessed)
             trans_category = trans.category or ""
             trans_details = trans.trans_details or ""
-            
+            trans_place = trans.place or ""
+
             # Apply category filter
             if category:
                 if trans_category != category:
@@ -59,6 +61,11 @@ def get_transactions_for_user(
                 if details_search.lower() not in trans_details.lower():
                     continue
             
+            # Apply place filter
+            if place_search:
+                if place_search.lower() not in trans_place.lower():
+                    continue
+
             filtered_transactions.append(trans)
         
         # Create a new queryset from filtered transactions

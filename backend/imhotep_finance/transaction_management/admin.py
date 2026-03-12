@@ -35,7 +35,8 @@ class TransactionsAdmin(ModelAdmin):
         'trans_status', 
         'trans_details', 
         'category',
-        'date'
+        'date',
+        'place'
     ]
     
     # Add filters for easy navigation
@@ -45,7 +46,8 @@ class TransactionsAdmin(ModelAdmin):
         'category', 
         'date', 
         'created_at',
-        'user'
+        'user',
+        'place'
     ]
     
     # Display these fields in the list view
@@ -57,7 +59,8 @@ class TransactionsAdmin(ModelAdmin):
         'get_trans_status_display_formatted',  # Changed from 'trans_status'
         'category', 
         'trans_details', 
-        'created_at'
+        'created_at',
+        'place'
     ]
     
     # Make these fields clickable links
@@ -77,7 +80,8 @@ class TransactionsAdmin(ModelAdmin):
         'currency', 
         'trans_status', 
         'category', 
-        'trans_details'
+        'trans_details',
+        'place'
     ]
 
     def get_trans_status_display_formatted(self, obj):

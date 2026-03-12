@@ -44,6 +44,13 @@ class TransactionInputSerializer(serializers.Serializer):
         required=True,
         help_text="Transaction type: Deposit or Withdraw"
     )
+    place = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Place of transaction (e.g., Cash, Bank, Credit Card). Defaults to 'Cash' if not provided."
+    )
 
     def validate_amount(self, value):
         """Ensure amount is positive."""
@@ -99,6 +106,13 @@ class TransactionUpdateSerializer(serializers.Serializer):
         ],
         required=True,
         help_text="Transaction type: Deposit or Withdraw"
+    )
+    place = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Place of transaction (e.g., Cash, Bank, Credit Card). Defaults to 'Cash' if not provided."
     )
 
     def validate_amount(self, value):
@@ -167,6 +181,7 @@ class TransactionOutputSerializer(serializers.Serializer):
     trans_status = serializers.CharField()
     trans_details = serializers.CharField(allow_null=True)
     category = serializers.CharField(allow_null=True)
+    place = serializers.CharField(allow_null=True, allow_blank=True)
     created_at = serializers.DateTimeField()
 
 

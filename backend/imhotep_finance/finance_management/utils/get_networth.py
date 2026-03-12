@@ -4,7 +4,7 @@ from transaction_management.models import NetWorth
 def get_networth(request):
     try:
         user = request.user
-        user_netWorth = NetWorth.objects.filter(user=user).values('total', 'currency')
+        user_netWorth = NetWorth.objects.filter(user=user).values('total', 'currency', 'place')
         
         if not user_netWorth.exists():
             return 0.0

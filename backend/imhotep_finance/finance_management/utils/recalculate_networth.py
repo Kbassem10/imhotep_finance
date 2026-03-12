@@ -1,5 +1,6 @@
 from django.db.models import Sum, Q
 from transaction_management.models import Transactions, NetWorth
+from finance_management.services import get_user_places
 
 def recalculate_networth(user):
     """Recalculate user's networth from all transactions."""
@@ -10,8 +11,6 @@ def recalculate_networth(user):
         # Get all unique currencies from user's transactions using Python set for true uniqueness
         currencies_queryset = Transactions.objects.filter(user=user).values_list('currency', flat=True)
         unique_currencies = list(set(currencies_queryset))  # Convert to set then back to list for true uniqueness
-
-        print(f"Unique currencies: {unique_currencies}")
         
         if not unique_currencies:
             # Clear existing networth records if no transactions exist

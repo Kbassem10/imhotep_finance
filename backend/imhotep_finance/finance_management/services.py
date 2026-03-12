@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+from transaction_management.models import Transactions
 from finance_management.utils.get_networth import get_networth, get_netWorth_details
 from finance_management.utils.get_category import get_category
 
@@ -52,3 +54,14 @@ def get_user_categories_service(user, status='ANY'):
         list: List of category names
     """
     return get_category(user, status)
+
+def get_user_places(*, user):
+    """Get distinct places from user's transactions."""
+    
+    if not user:
+        raise ValidationError("User must be authenticated!")
+    
+    # Get places from transactions
+    transaction_places = Transactions.objects.filter(user=user).values_list('place', flat=True).distinct()
+    
+    return list(set(transaction_places))

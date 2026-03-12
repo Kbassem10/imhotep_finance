@@ -59,7 +59,8 @@ class TransactionCreateApi(APIView):
                 trans_status=data['trans_status'],
                 category=data.get('category'),
                 trans_details=data.get('trans_details'),
-                transaction_date=data.get('date')
+                transaction_date=data.get('date'),
+                place=data.get('place', 'Cash')
             )
             return Response(
                 {"message": "Transaction created successfully", "id": transaction.id},
@@ -152,7 +153,8 @@ class TransactionUpdateApi(APIView):
                 trans_status=data['trans_status'],
                 category=data.get('category'),
                 trans_details=data.get('trans_details'),
-                transaction_date=data['date']
+                transaction_date=data['date'],
+                place=data.get('place', 'Cash')
             )
             
             # Get updated networth
@@ -205,7 +207,8 @@ class TransactionListApi(APIView):
                 end_date=filters.get('end_date'),
                 category=filters.get('category'),
                 trans_status=filters.get('trans_status'),
-                details_search=filters.get('details_search')
+                details_search=filters.get('details_search'),
+                place_search=filters.get('place_search')
             )
             
             # Paginate results
@@ -288,7 +291,8 @@ class TransactionExportCSVApi(APIView):
                     transaction.currency,
                     transaction.trans_status,
                     transaction.category,
-                    transaction.trans_details
+                    transaction.trans_details,
+                    transaction.place
                 ])
             
             return response
