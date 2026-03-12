@@ -28,3 +28,11 @@ class CategoryResponseSerializer(serializers.Serializer):
         child=serializers.CharField(),
         help_text="List of frequently used category names"
     )
+
+
+class PlacesResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text="User ID")
+    places = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="List of frequently used place names"
+    )

@@ -164,6 +164,12 @@ class TransactionFilterSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Search in transaction details"
     )
+    place_search = serializers.CharField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Search in transaction place"
+    )
     page = serializers.IntegerField(
         required=False,
         default=1,
@@ -193,7 +199,7 @@ class TransactionListResponseSerializer(serializers.Serializer):
 class CSVFileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(
         required=True,
-        help_text="CSV file with columns: date, amount, currency, trans_status, trans_details (optional), category (optional)"
+        help_text="CSV file with columns: date, amount, currency, trans_status, trans_details (optional), category (optional), place (optional)"
     )
     
     def validate_file(self, file):

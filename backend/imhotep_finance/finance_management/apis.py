@@ -13,7 +13,8 @@ from finance_management.serializers import (
     NetworthResponseSerializer,
     NetworthDetailsResponseSerializer,
     CategoryRequestSerializer,
-    CategoryResponseSerializer
+    CategoryResponseSerializer,
+    PlacesResponseSerializer
 )
 
 
@@ -87,7 +88,7 @@ class GetUserPlacesApi(APIView):
     @extend_schema(
         tags=['Finance Management'],
         description="Get user's most frequently used places.",
-        responses={200: CategoryResponseSerializer},
+        responses={200: PlacesResponseSerializer},
         operation_id='get_places'
     )
     def get(self, request):
